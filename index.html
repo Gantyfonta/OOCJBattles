@@ -45,11 +45,11 @@
         <div id="ui-home" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/80 backdrop-blur-sm z-40 text-white p-6 text-center">
             <div class="absolute top-6 left-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
                 <div class="flex flex-col items-start leading-tight">
-                    <span class="text-[9px] uppercase font-black text-white/40 tracking-tighter">Stats</span>
-                    <div class="text-[11px] font-black">
+                    <span class="text-[9px] uppercase font-black text-white/40 tracking-tighter">Combat Records</span>
+                    <div class="text-[11px] font-black flex items-center gap-2">
                         <span class="text-green-400">W: <span id="stat-wins">0</span></span>
-                        <span class="mx-1 opacity-20">|</span>
                         <span class="text-red-400">L: <span id="stat-losses">0</span></span>
+                        <span class="bg-indigo-500/30 px-1.5 py-0.5 rounded text-indigo-300 ml-1"><span id="stat-rate">0</span>% WR</span>
                     </div>
                 </div>
             </div>
@@ -235,7 +235,7 @@
             wins: parseInt(localStorage.getItem('oinkWins')) || 0,
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
             pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2 },
-            opponent: { x: 200, y: 550, score: 0, status: 'playing' },
+            opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none' },
             clocks: [], cameraY: 0, lastTime: 0
         };
 
@@ -253,8 +253,11 @@
         }
 
         function updateStatUI() {
+            const total = state.wins + state.losses;
+            const rate = total > 0 ? ((state.wins / total) * 100).toFixed(1) : "0.0";
             document.getElementById('stat-wins').innerText = state.wins;
             document.getElementById('stat-losses').innerText = state.losses;
+            document.getElementById('stat-rate').innerText = rate;
         }
 
         function addWin() {
@@ -363,6 +366,9 @@
                 const data = snap.val();
                 const oppId = role === 'p1' ? 'p2' : 'p1';
                 state.clocks = data.clocks;
+                state.opponent.skin = data[oppId].skin || 'classic';
+                state.opponent.hat = data[oppId].hat || 'none';
+                
                 document.getElementById('p1-name').innerText = data[role].name;
                 document.getElementById('p2-name').innerText = data[oppId].name;
                 drawPigAvatar(document.getElementById('p1-preview').getContext('2d'), SKINS.find(s=>s.id===data[role].skin), 32, 32, 1, 0, data[role].hat);
@@ -386,6 +392,8 @@
                 if (d) {
                     state.opponent.x = d.x; state.opponent.y = d.y; state.opponent.score = d.score;
                     state.opponent.status = d.status || 'playing';
+                    state.opponent.skin = d.skin || state.opponent.skin;
+                    state.opponent.hat = d.hat || state.opponent.hat;
                     document.getElementById('opponent-score-val').innerText = d.score;
                     if (d.status === 'dead' && state.status === 'PLAYING') checkWinner();
                 }
@@ -524,8 +532,8 @@
             const mySkin = SKINS.find(s=>s.id===state.selectedSkinId);
             drawPigAvatar(ctx, mySkin, state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
             if (state.isMultiplayer) {
-                const oppSkin = SKINS[0];
-                ctx.globalAlpha = 0.5; drawPigAvatar(ctx, oppSkin, state.opponent.x, state.opponent.y, 1, 0, 'none'); ctx.globalAlpha = 1.0;
+                const oppSkin = SKINS.find(s => s.id === state.opponent.skin) || SKINS[0];
+                ctx.globalAlpha = 0.5; drawPigAvatar(ctx, oppSkin, state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat); ctx.globalAlpha = 1.0;
             }
             ctx.restore();
         }
