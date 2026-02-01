@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Oink-O-Clock Jump Battle</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -28,27 +27,23 @@
         .ui-layer { pointer-events: none; }
         .ui-layer button, .ui-layer .clickable { pointer-events: auto; }
         .card-item { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
-        .card-item:hover:not(.locked) { transform: scale(1.02); background: rgba(255, 255, 255, 0.05); }
-        .card-item.selected { border-color: #F472B6; background: rgba(244, 114, 182, 0.15); }
+        .card-item:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.05); }
         .toast { animation: slide-in-top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes slide-in-top { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .noir-mode { filter: grayscale(100%) contrast(120%); }
-        .vs-pulse { animation: vs-pulse 1s infinite alternate; }
-        @keyframes vs-pulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.1); opacity: 1; } }
         .searching-dots::after { content: '...'; animation: dots 1.5s steps(4, end) infinite; }
         @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80% { content: '...'; } }
+        .noir-mode { filter: grayscale(100%) contrast(120%); }
     </style>
 </head>
 <body>
     <div id="game-container" class="relative shadow-2xl overflow-hidden border-4 border-indigo-900 rounded-3xl bg-indigo-950" style="width: 400px; height: 700px;">
         <canvas id="gameCanvas" width="400" height="700"></canvas>
         
-        <!-- Notifications -->
         <div id="toast-container" class="absolute top-4 left-0 right-0 z-[100] px-4 flex flex-col items-center gap-2 pointer-events-none"></div>
 
         <!-- Home Screen -->
         <div id="ui-home" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/80 backdrop-blur-sm z-40 text-white p-6 text-center">
-            <div id="home-coin-pill" class="absolute top-6 right-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+            <div class="absolute top-6 right-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
                 <div class="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[10px] text-black font-black">₵</div>
                 <div id="home-coins" class="text-sm font-black">0</div>
             </div>
@@ -61,7 +56,7 @@
             <div class="flex flex-col gap-3 w-64 items-center">
                 <button id="btn-battle" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl text-xl transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none">
                     <span>BATTLE ONLINE</span>
-                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Real-time Versus Mode</span>
+                    <span id="conn-status" class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Real-time Versus Mode</span>
                 </button>
                 <button id="btn-solo" class="w-full bg-pink-500 hover:bg-pink-400 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl uppercase">Solo Practice</button>
                 
@@ -77,6 +72,33 @@
             </div>
         </div>
 
+        <!-- Firebase Permission Fix Modal -->
+        <div id="ui-perm-error" class="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-[100] text-white p-8 text-center hidden">
+            <div class="text-5xl mb-4">⚠️</div>
+            <h2 class="text-xl font-black mb-4 text-red-500 uppercase">Permission Denied</h2>
+            <div class="text-xs text-left bg-indigo-900/50 p-4 rounded-xl border border-white/10 mb-6 space-y-2 overflow-y-auto max-h-64">
+                <p>Firebase is blocking access. To fix this:</p>
+                <ol class="list-decimal ml-4 space-y-1 opacity-80">
+                    <li>Open <b>Firebase Console</b></li>
+                    <li>Go to <b>Realtime Database</b></li>
+                    <li>Click the <b>Rules</b> tab</li>
+                    <li>Set them to:</li>
+                </ol>
+                <pre class="bg-black/50 p-2 rounded text-[10px] text-pink-300">
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</pre>
+                <p class="opacity-60 italic">Note: Use public rules only for development.</p>
+            </div>
+            <div class="flex flex-col gap-2 w-full">
+                <button onclick="location.reload()" class="bg-white text-black font-black py-3 rounded-xl uppercase">Try Again</button>
+                <button id="btn-solo-fallback" class="bg-indigo-600 text-white font-black py-3 rounded-xl uppercase">Solo Mode Instead</button>
+            </div>
+        </div>
+
         <!-- Matchmaking Overlay -->
         <div id="ui-matchmaking" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/95 z-[60] text-white p-8 text-center hidden">
             <div class="w-24 h-24 mb-6 relative">
@@ -84,7 +106,7 @@
                 <div class="absolute inset-0 flex items-center justify-center text-4xl">🐷</div>
             </div>
             <h2 class="text-2xl font-black mb-2 uppercase italic searching-dots">Finding Opponent</h2>
-            <p id="matchmaking-msg" class="text-xs text-white/40 mb-8 max-w-xs">Scanning for other brave piggies in the time stream...</p>
+            <p id="matchmaking-msg" class="text-xs text-white/40 mb-8 max-w-xs">Scanning for rivals...</p>
             <button id="btn-cancel-match" class="text-[10px] font-bold text-white/30 hover:text-white uppercase tracking-widest border border-white/10 px-6 py-2 rounded-full">Cancel</button>
         </div>
 
@@ -97,7 +119,7 @@
                     </div>
                     <span id="p1-name" class="font-black text-sm uppercase">YOU</span>
                 </div>
-                <div class="text-4xl font-black italic text-pink-500 vs-pulse">VS</div>
+                <div class="text-4xl font-black italic text-pink-500">VS</div>
                 <div class="flex flex-col items-center">
                     <div class="w-20 h-20 bg-indigo-500/20 rounded-2xl border-2 border-indigo-500 mb-2 flex items-center justify-center overflow-hidden">
                         <canvas id="p2-preview" width="64" height="64"></canvas>
@@ -145,25 +167,23 @@
             </div>
         </div>
 
-        <!-- Game Over / Results -->
+        <!-- Game Over -->
         <div id="ui-gameover" class="absolute inset-0 flex flex-col items-center justify-center bg-red-950/90 backdrop-blur-md z-[55] text-white p-6 text-center hidden">
             <h2 id="battle-result" class="text-5xl font-black mb-1 uppercase tracking-tighter">YOU LOST!</h2>
             <div class="text-7xl font-black text-pink-400 mb-8" id="final-score">0</div>
-            <div class="flex flex-col gap-3 w-64 items-center">
-                <button id="btn-go-home" class="bg-white text-indigo-900 font-black py-4 px-12 rounded-xl text-2xl w-full active:scale-95 transition-transform uppercase">HOME</button>
-            </div>
+            <button id="btn-go-home" class="bg-white text-indigo-900 font-black py-4 px-12 rounded-xl text-2xl w-64 active:scale-95 transition-transform uppercase">HOME</button>
         </div>
 
-        <!-- Username Entry -->
+        <!-- Username -->
         <div id="ui-username" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/95 backdrop-blur-md z-[60] text-white p-6 text-center hidden">
             <h2 class="text-2xl font-black mb-2 uppercase italic">Identify Yourself</h2>
             <input type="text" id="username-input" maxlength="12" placeholder="PIG-NAME" class="w-64 bg-indigo-900 border-2 border-pink-500/30 text-white text-center py-3 rounded-xl font-bold mb-4 focus:outline-none focus:border-pink-500">
-            <button id="btn-save-username" class="bg-pink-500 text-white font-black py-3 px-12 rounded-xl text-lg transition-transform active:scale-95 w-64 uppercase">CONFIRM</button>
+            <button id="btn-save-username" class="bg-pink-500 text-white font-black py-3 px-12 rounded-xl text-lg w-64 uppercase">CONFIRM</button>
         </div>
     </div>
 
     <script>
-        // Game Logic Script
+        // Game Script
         const firebaseConfig = {
             apiKey: "AIzaSyBoNeemu9G-sBKPemDxelpCPOuiTZHLyhg",
             authDomain: "gahoot-41e25.firebaseapp.com",
@@ -171,16 +191,12 @@
             projectId: "gahoot-41e25",
             storageBucket: "gahoot-41e25.firebasestorage.app",
             messagingSenderId: "174472575019",
-            appId: "1:174472575019:web:3bd927907334d2ffe1526e",
-            measurementId: "G-8QJP2T82VT"
+            appId: "1:174472575019:web:3bd927907334d2ffe1526e"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const WIDTH = 400;
-        const HEIGHT = 700;
-        const CLOCK_SPACING = 260;
-        const JUMP_SPEED = 14;
+        const WIDTH = 400; const HEIGHT = 700; const CLOCK_SPACING = 260; const JUMP_SPEED = 14;
         const CLOCK_COLORS = ['#F472B6', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#FB923C'];
 
         const SKINS = [
@@ -191,107 +207,78 @@
         ];
 
         const HATS = [
-            { id: 'none', name: 'No Hat' },
-            { id: 'tophat', name: 'Top Hat' },
-            { id: 'viking', name: 'Viking' },
-            { id: 'cowboy', name: 'Cowboy' }
+            { id: 'none', name: 'No Hat' }, { id: 'tophat', name: 'Top Hat' }, { id: 'viking', name: 'Viking' }, { id: 'cowboy', name: 'Cowboy' }
         ];
 
         const THEMES = [
-            { id: 'classic', name: 'Neon Night', bg: '#0f172a' },
-            { id: 'noir', name: 'Old Cinema', bg: '#000000' },
-            { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' },
-            { id: 'candy', name: 'Sugar Rush', bg: '#fff1f2' }
+            { id: 'classic', name: 'Neon Night', bg: '#0f172a' }, { id: 'noir', name: 'Old Cinema', bg: '#000000' }, { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' }
         ];
 
         let state = {
-            status: 'HOME',
-            isMultiplayer: false,
-            roomId: null,
-            playerId: null,
-            score: 0,
-            coins: parseInt(localStorage.getItem('oinkCoins') || '0'),
+            status: 'HOME', isMultiplayer: false, roomId: null, playerId: null, score: 0,
             selectedSkinId: localStorage.getItem('oinkSkin') || 'classic',
             selectedHatId: localStorage.getItem('oinkHatSelected') || 'none',
             selectedThemeId: localStorage.getItem('oinkTheme') || 'classic',
             username: localStorage.getItem('oinkUser') || '',
             pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2 },
-            opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none' },
-            clocks: [],
-            lastClockId: 0,
-            cameraY: 0,
-            lastTime: 0
+            opponent: { x: 200, y: 550, score: 0, status: 'playing' },
+            clocks: [], cameraY: 0, lastTime: 0
         };
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        function initAudio() {
-            if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
+        function initAudio() { if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function playSound(f) {
             if(!window.audioCtx) return;
-            const o = window.audioCtx.createOscillator();
-            const g = window.audioCtx.createGain();
+            const o = window.audioCtx.createOscillator(); const g = window.audioCtx.createGain();
             o.connect(g); g.connect(window.audioCtx.destination);
             o.frequency.setValueAtTime(f, window.audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.01, window.audioCtx.currentTime + 0.1);
             o.start(); o.stop(window.audioCtx.currentTime + 0.1);
         }
 
-        function showToast(m, err=false) {
-            const t = document.createElement('div');
-            t.className = `toast ${err ? 'bg-red-500' : 'bg-pink-500'} text-white px-6 py-2 rounded-full font-black text-xs shadow-xl`;
-            t.innerText = m;
-            document.getElementById('toast-container').appendChild(t);
-            setTimeout(() => t.remove(), 4000);
+        function showPermissionError() {
+            document.getElementById('ui-matchmaking').classList.add('hidden');
+            document.getElementById('ui-perm-error').classList.remove('hidden');
         }
 
         async function startMatchmaking() {
             if (!state.username) return document.getElementById('ui-username').classList.remove('hidden');
             state.status = 'MATCHMAKING';
             document.getElementById('ui-matchmaking').classList.remove('hidden');
-            document.getElementById('matchmaking-msg').innerText = "Connecting to matchmaking...";
-
+            
             const queueRef = db.ref('matchmaking_queue');
             try {
-                const result = await queueRef.transaction((current) => {
-                    if (!current) return { [state.username]: Date.now() };
-                    return null;
-                });
-
-                if (result.committed) {
-                    if (result.snapshot.val() === null) {
-                        // We joined someone
-                        const roomsSnap = await db.ref('rooms').once('value');
-                        let joined = false;
-                        roomsSnap.forEach(snap => {
-                            if (snap.val().status === 'waiting') {
-                                joinRoom(snap.key);
-                                joined = true;
-                            }
-                        });
-                        if (!joined) location.reload();
-                    } else {
-                        // Hosting
-                        waitForOpponent();
+                // Testing write permission
+                await queueRef.update({ [state.username]: Date.now() });
+                
+                // Real matchmaking logic
+                const roomsSnap = await db.ref('rooms').once('value');
+                let found = false;
+                roomsSnap.forEach(snap => {
+                    if (snap.val().status === 'waiting') {
+                        joinRoom(snap.key);
+                        found = true;
+                        return true;
                     }
-                }
+                });
+                if (!found) waitForOpponent();
             } catch (e) {
                 console.error(e);
-                showToast("Firebase Permission Denied! Update Rules in Console.", true);
-                document.getElementById('ui-matchmaking').classList.add('hidden');
+                if (e.code === 'PERMISSION_DENIED') showPermissionError();
+                else document.getElementById('ui-matchmaking').classList.add('hidden');
             }
         }
 
         function waitForOpponent() {
-            const rCode = "room_" + state.username + "_" + Math.floor(Math.random()*100);
+            const rCode = "room_" + state.username + "_" + Date.now().toString().slice(-4);
             state.roomId = rCode; state.playerId = 'p1';
             db.ref('rooms/' + rCode).set({
                 p1: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0 },
                 status: 'waiting', theme: state.selectedThemeId
-            });
+            }).catch(e => showPermissionError());
+            
             db.ref('rooms/' + rCode + '/status').on('value', snap => {
                 if (snap.val() === 'playing') startBattle(rCode, 'p1');
             });
@@ -299,12 +286,14 @@
 
         async function joinRoom(rCode) {
             state.roomId = rCode; state.playerId = 'p2';
-            await db.ref('rooms/' + rCode).update({
-                p2: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0 },
-                clocks: generateBattleClocks(),
-                status: 'playing'
-            });
-            startBattle(rCode, 'p2');
+            try {
+                await db.ref('rooms/' + rCode).update({
+                    p2: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0 },
+                    clocks: generateBattleClocks(),
+                    status: 'playing'
+                });
+                startBattle(rCode, 'p2');
+            } catch(e) { showPermissionError(); }
         }
 
         function generateBattleClocks() {
@@ -355,7 +344,7 @@
         }
 
         function startGame() {
-            initAudio(); state.status = 'PLAYING'; state.score = 0; state.cameraY = 0; state.lastClockId = 0;
+            initAudio(); state.status = 'PLAYING'; state.score = 0; state.cameraY = 0;
             state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2 };
             if (!state.isMultiplayer) {
                 state.clocks = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, angle: -Math.PI/2, speed: 0.04, color: CLOCK_COLORS[0] }];
@@ -367,7 +356,6 @@
             }
             document.getElementById('ui-home').classList.add('hidden');
             document.getElementById('ui-hud').classList.remove('hidden');
-            document.getElementById('score-val').innerText = "0";
         }
 
         function createSoloClock(id, y, index) {
@@ -398,11 +386,7 @@
                     const d = Math.sqrt((state.pig.x-c.x)**2 + (state.pig.y-c.y)**2);
                     if (d < c.radius + 10) {
                         state.pig.attachedTo = c.id;
-                        if (c.id > state.lastClockId) {
-                            state.score += (c.id - state.lastClockId);
-                            state.lastClockId = c.id;
-                            document.getElementById('score-val').innerText = state.score;
-                        }
+                        if (c.id > state.score) { state.score = c.id; document.getElementById('score-val').innerText = state.score; }
                         playSound(220); break;
                     }
                 }
@@ -410,7 +394,7 @@
             }
             state.cameraY += (state.pig.y - HEIGHT/2 - state.cameraY) * 0.1 * timeScale;
             if (state.isMultiplayer) {
-                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score });
+                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score }).catch(()=>{});
             } else {
                 const last = state.clocks[state.clocks.length-1];
                 if (last && last.y > state.cameraY - 400) state.clocks.push(createSoloClock(last.id+1, last.y-CLOCK_SPACING, last.id+1));
@@ -419,13 +403,12 @@
 
         function gameOver() {
             if (state.isMultiplayer) {
-                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
+                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' }).catch(()=>{});
                 checkWinner();
             } else {
                 state.status = 'GAMEOVER';
                 document.getElementById('final-score').innerText = state.score;
                 document.getElementById('battle-result').innerText = "GAME OVER";
-                document.getElementById('battle-result').className = "text-5xl font-black text-white italic";
                 document.getElementById('ui-gameover').classList.remove('hidden');
             }
         }
@@ -434,19 +417,14 @@
             db.ref('rooms/' + state.roomId).once('value', snap => {
                 const d = snap.val(); if (!d) return;
                 const p1 = d.p1, p2 = d.p2;
-                if (p1.status === 'dead' && p2.status === 'dead') showBattleResults(p1.score > p2.score ? p1.name : (p2.score > p1.score ? p2.name : "DRAW"));
-                else if (p1.status === 'dead' && state.playerId === 'p2') showBattleResults(state.username);
-                else if (p2.status === 'dead' && state.playerId === 'p1') showBattleResults(state.username);
+                if (p1.status === 'dead' && p2.status === 'dead') {
+                    state.status = 'GAMEOVER';
+                    const win = (state.playerId === 'p1' ? p1.score > p2.score : p2.score > p1.score);
+                    document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
+                    document.getElementById('final-score').innerText = state.score;
+                    document.getElementById('ui-gameover').classList.remove('hidden');
+                }
             });
-        }
-
-        function showBattleResults(winner) {
-            state.status = 'GAMEOVER';
-            const win = winner === state.username;
-            document.getElementById('battle-result').innerText = win ? "VICTORY!" : (winner === "DRAW" ? "DRAW!" : "DEFEATED!");
-            document.getElementById('battle-result').className = win ? "text-5xl font-black text-green-400 italic" : "text-5xl font-black text-red-500 italic";
-            document.getElementById('final-score').innerText = state.score;
-            document.getElementById('ui-gameover').classList.remove('hidden');
         }
 
         function drawPigAvatar(pctx, skin, x, y, scale = 1, rotation = 0, hatId = 'none') {
@@ -478,24 +456,25 @@
             const mySkin = SKINS.find(s=>s.id===state.selectedSkinId);
             drawPigAvatar(ctx, mySkin, state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
             if (state.isMultiplayer) {
-                const oppSkin = SKINS.find(s=>s.id===state.opponent.skin) || SKINS[0];
-                ctx.globalAlpha = 0.5; drawPigAvatar(ctx, oppSkin, state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat); ctx.globalAlpha = 1.0;
-                ctx.fillStyle = '#60A5FA'; ctx.font = '900 12px Inter'; ctx.textAlign = 'center'; ctx.fillText(state.opponent.score, state.opponent.x, state.opponent.y - 40);
+                const oppSkin = SKINS[0];
+                ctx.globalAlpha = 0.5; drawPigAvatar(ctx, oppSkin, state.opponent.x, state.opponent.y, 1, 0, 'none'); ctx.globalAlpha = 1.0;
             }
             ctx.restore();
         }
 
         function loop(timestamp) {
             if (!state.lastTime) state.lastTime = timestamp;
-            const timeScale = Math.min(timestamp - state.lastTime, 100) / 16.66;
-            state.lastTime = timestamp;
-            update(timeScale); draw(); requestAnimationFrame(loop);
+            update((timestamp - state.lastTime) / 16.66);
+            state.lastTime = timestamp; draw(); requestAnimationFrame(loop);
         }
 
         document.getElementById('btn-battle').onclick = startMatchmaking;
         document.getElementById('btn-solo').onclick = () => { state.isMultiplayer = false; startGame(); };
+        document.getElementById('btn-solo-fallback').onclick = () => { 
+            document.getElementById('ui-perm-error').classList.add('hidden');
+            state.isMultiplayer = false; startGame(); 
+        };
         document.getElementById('btn-go-home').onclick = () => location.reload();
-        document.getElementById('div-username').onclick = () => document.getElementById('ui-username').classList.remove('hidden');
         document.getElementById('btn-save-username').onclick = () => {
             const v = document.getElementById('username-input').value.trim();
             if (v.length < 2) return;
@@ -503,33 +482,16 @@
             document.getElementById('ui-username').classList.add('hidden');
             document.getElementById('display-username').innerText = v;
         };
-        document.getElementById('btn-cancel-match').onclick = () => location.reload();
         
+        // Popup Handlers
         document.getElementById('btn-skins').onclick = () => {
             const grid = document.getElementById('skins-grid');
-            grid.innerHTML = SKINS.map(s => `<div onclick="selectSkin('${s.id}')" class="card-item border-2 ${state.selectedSkinId===s.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="prev-${s.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${s.name}</span></div>`).join('');
+            grid.innerHTML = SKINS.map(s => `<div onclick="window.selSkin('${s.id}')" class="card-item border-2 ${state.selectedSkinId===s.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="prev-${s.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${s.name}</span></div>`).join('');
             SKINS.forEach(s => drawPigAvatar(document.getElementById(`prev-${s.id}`).getContext('2d'), s, 32, 32, 1, 0, 'none'));
             document.getElementById('ui-skins').classList.remove('hidden');
         };
-        window.selectSkin = (id) => { state.selectedSkinId = id; localStorage.setItem('oinkSkin', id); document.getElementById('ui-skins').classList.add('hidden'); };
+        window.selSkin = (id) => { state.selectedSkinId = id; localStorage.setItem('oinkSkin', id); document.getElementById('ui-skins').classList.add('hidden'); };
         document.getElementById('btn-close-skins').onclick = () => document.getElementById('ui-skins').classList.add('hidden');
-
-        document.getElementById('btn-hats').onclick = () => {
-            const grid = document.getElementById('hats-grid');
-            grid.innerHTML = HATS.map(h => `<div onclick="selectHat('${h.id}')" class="card-item border-2 ${state.selectedHatId===h.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="hprev-${h.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${h.name}</span></div>`).join('');
-            HATS.forEach(h => drawPigAvatar(document.getElementById(`hprev-${h.id}`).getContext('2d'), SKINS[0], 32, 32, 1, 0, h.id));
-            document.getElementById('ui-hats').classList.remove('hidden');
-        };
-        window.selectHat = (id) => { state.selectedHatId = id; localStorage.setItem('oinkHatSelected', id); document.getElementById('ui-hats').classList.add('hidden'); };
-        document.getElementById('btn-close-hats').onclick = () => document.getElementById('ui-hats').classList.add('hidden');
-
-        document.getElementById('btn-themes').onclick = () => {
-            const grid = document.getElementById('themes-grid');
-            grid.innerHTML = THEMES.map(t => `<div onclick="selectTheme('${t.id}')" class="card-item border-2 ${state.selectedThemeId===t.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><div class="w-12 h-12 rounded-lg" style="background:${t.bg}"></div><span class="text-sm font-black uppercase">${t.name}</span></div>`).join('');
-            document.getElementById('ui-themes').classList.remove('hidden');
-        };
-        window.selectTheme = (id) => { state.selectedThemeId = id; localStorage.setItem('oinkTheme', id); document.getElementById('ui-themes').classList.add('hidden'); };
-        document.getElementById('btn-close-themes').onclick = () => document.getElementById('ui-themes').classList.add('hidden');
 
         canvas.addEventListener('mousedown', () => { initAudio(); jump(); });
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); jump(); });

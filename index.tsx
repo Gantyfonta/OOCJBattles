@@ -1,1 +1,1 @@
-// Logic moved to index.html for robustness.
+// Modular logic moved to index.html for zero-build compatibility.
