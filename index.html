@@ -94,7 +94,7 @@
                 <p class="opacity-60 italic">Note: Use public rules only for development.</p>
             </div>
             <div class="flex flex-col gap-2 w-full">
-                <button onclick="location.reload()" class="bg-white text-black font-black py-3 rounded-xl uppercase">Try Again</button>
+                <button onclick="backToHome()" class="bg-white text-black font-black py-3 rounded-xl uppercase">Try Again</button>
                 <button id="btn-solo-fallback" class="bg-indigo-600 text-white font-black py-3 rounded-xl uppercase">Solo Mode Instead</button>
             </div>
         </div>
@@ -170,7 +170,8 @@
         <!-- Game Over -->
         <div id="ui-gameover" class="absolute inset-0 flex flex-col items-center justify-center bg-red-950/90 backdrop-blur-md z-[55] text-white p-6 text-center hidden">
             <h2 id="battle-result" class="text-5xl font-black mb-1 uppercase tracking-tighter">YOU LOST!</h2>
-            <div class="text-7xl font-black text-pink-400 mb-8" id="final-score">0</div>
+            <div class="text-7xl font-black text-pink-400 mb-2" id="final-score">0</div>
+            <p id="return-hint" class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-8">Returning to menu...</p>
             <button id="btn-go-home" class="bg-white text-indigo-900 font-black py-4 px-12 rounded-xl text-2xl w-64 active:scale-95 transition-transform uppercase">HOME</button>
         </div>
 
@@ -238,6 +239,26 @@
             o.start(); o.stop(window.audioCtx.currentTime + 0.1);
         }
 
+        function backToHome() {
+            state.status = 'HOME';
+            state.isMultiplayer = false;
+            state.clocks = [];
+            state.score = 0;
+            state.cameraY = 0;
+            if (state.roomId) {
+                db.ref('rooms/' + state.roomId).off();
+                state.roomId = null;
+            }
+            // Reset UI layers
+            document.getElementById('ui-home').classList.remove('hidden');
+            document.getElementById('ui-hud').classList.add('hidden');
+            document.getElementById('ui-gameover').classList.add('hidden');
+            document.getElementById('ui-matchmaking').classList.add('hidden');
+            document.getElementById('ui-battle-start').classList.add('hidden');
+            document.getElementById('ui-perm-error').classList.add('hidden');
+            document.getElementById('home-coins').innerText = state.coins;
+        }
+
         function showPermissionError() {
             document.getElementById('ui-matchmaking').classList.add('hidden');
             document.getElementById('ui-perm-error').classList.remove('hidden');
@@ -250,10 +271,7 @@
             
             const queueRef = db.ref('matchmaking_queue');
             try {
-                // Testing write permission
                 await queueRef.update({ [state.username]: Date.now() });
-                
-                // Real matchmaking logic
                 const roomsSnap = await db.ref('rooms').once('value');
                 let found = false;
                 roomsSnap.forEach(snap => {
@@ -410,6 +428,8 @@
                 document.getElementById('final-score').innerText = state.score;
                 document.getElementById('battle-result').innerText = "GAME OVER";
                 document.getElementById('ui-gameover').classList.remove('hidden');
+                // Auto return to menu
+                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 2500);
             }
         }
 
@@ -423,6 +443,8 @@
                     document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
                     document.getElementById('final-score').innerText = state.score;
                     document.getElementById('ui-gameover').classList.remove('hidden');
+                    // Auto return to menu
+                    setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 4000);
                 }
             });
         }
@@ -471,10 +493,11 @@
         document.getElementById('btn-battle').onclick = startMatchmaking;
         document.getElementById('btn-solo').onclick = () => { state.isMultiplayer = false; startGame(); };
         document.getElementById('btn-solo-fallback').onclick = () => { 
-            document.getElementById('ui-perm-error').classList.add('hidden');
+            backToHome();
             state.isMultiplayer = false; startGame(); 
         };
-        document.getElementById('btn-go-home').onclick = () => location.reload();
+        document.getElementById('btn-go-home').onclick = () => backToHome();
+        document.getElementById('btn-cancel-match').onclick = () => backToHome();
         document.getElementById('btn-save-username').onclick = () => {
             const v = document.getElementById('username-input').value.trim();
             if (v.length < 2) return;
@@ -492,6 +515,23 @@
         };
         window.selSkin = (id) => { state.selectedSkinId = id; localStorage.setItem('oinkSkin', id); document.getElementById('ui-skins').classList.add('hidden'); };
         document.getElementById('btn-close-skins').onclick = () => document.getElementById('ui-skins').classList.add('hidden');
+
+        document.getElementById('btn-hats').onclick = () => {
+            const grid = document.getElementById('hats-grid');
+            grid.innerHTML = HATS.map(h => `<div onclick="window.selHat('${h.id}')" class="card-item border-2 ${state.selectedHatId===h.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="hprev-${h.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${h.name}</span></div>`).join('');
+            HATS.forEach(h => drawPigAvatar(document.getElementById(`hprev-${h.id}`).getContext('2d'), SKINS[0], 32, 32, 1, 0, h.id));
+            document.getElementById('ui-hats').classList.remove('hidden');
+        };
+        window.selHat = (id) => { state.selectedHatId = id; localStorage.setItem('oinkHatSelected', id); document.getElementById('ui-hats').classList.add('hidden'); };
+        document.getElementById('btn-close-hats').onclick = () => document.getElementById('ui-hats').classList.add('hidden');
+
+        document.getElementById('btn-themes').onclick = () => {
+            const grid = document.getElementById('themes-grid');
+            grid.innerHTML = THEMES.map(t => `<div onclick="window.selTheme('${t.id}')" class="card-item border-2 ${state.selectedThemeId===t.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><div class="w-12 h-12 rounded-lg" style="background:${t.bg}"></div><span class="text-sm font-black uppercase">${t.name}</span></div>`).join('');
+            document.getElementById('ui-themes').classList.remove('hidden');
+        };
+        window.selTheme = (id) => { state.selectedThemeId = id; localStorage.setItem('oinkTheme', id); document.getElementById('ui-themes').classList.add('hidden'); };
+        document.getElementById('btn-close-themes').onclick = () => document.getElementById('ui-themes').classList.add('hidden');
 
         canvas.addEventListener('mousedown', () => { initAudio(); jump(); });
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); jump(); });
