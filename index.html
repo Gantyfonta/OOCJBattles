@@ -43,6 +43,17 @@
 
         <!-- Home Screen -->
         <div id="ui-home" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/80 backdrop-blur-sm z-40 text-white p-6 text-center">
+            <div class="absolute top-6 left-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+                <div class="flex flex-col items-start leading-tight">
+                    <span class="text-[9px] uppercase font-black text-white/40 tracking-tighter">Stats</span>
+                    <div class="text-[11px] font-black">
+                        <span class="text-green-400">W: <span id="stat-wins">0</span></span>
+                        <span class="mx-1 opacity-20">|</span>
+                        <span class="text-red-400">L: <span id="stat-losses">0</span></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="absolute top-6 right-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
                 <div class="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[10px] text-black font-black">₵</div>
                 <div id="home-coins" class="text-sm font-black">0</div>
@@ -221,6 +232,8 @@
             selectedHatId: localStorage.getItem('oinkHatSelected') || 'none',
             selectedThemeId: localStorage.getItem('oinkTheme') || 'classic',
             username: localStorage.getItem('oinkUser') || '',
+            wins: parseInt(localStorage.getItem('oinkWins')) || 0,
+            losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
             pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2 },
             opponent: { x: 200, y: 550, score: 0, status: 'playing' },
             clocks: [], cameraY: 0, lastTime: 0
@@ -237,6 +250,23 @@
             o.frequency.setValueAtTime(f, window.audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.01, window.audioCtx.currentTime + 0.1);
             o.start(); o.stop(window.audioCtx.currentTime + 0.1);
+        }
+
+        function updateStatUI() {
+            document.getElementById('stat-wins').innerText = state.wins;
+            document.getElementById('stat-losses').innerText = state.losses;
+        }
+
+        function addWin() {
+            state.wins++;
+            localStorage.setItem('oinkWins', state.wins);
+            updateStatUI();
+        }
+
+        function addLoss() {
+            state.losses++;
+            localStorage.setItem('oinkLosses', state.losses);
+            updateStatUI();
         }
 
         function backToHome() {
@@ -256,7 +286,8 @@
             document.getElementById('ui-matchmaking').classList.add('hidden');
             document.getElementById('ui-battle-start').classList.add('hidden');
             document.getElementById('ui-perm-error').classList.add('hidden');
-            document.getElementById('home-coins').innerText = state.coins;
+            document.getElementById('home-coins').innerText = state.coins || 0;
+            updateStatUI();
         }
 
         function showPermissionError() {
@@ -435,6 +466,7 @@
                 checkWinner();
             } else {
                 state.status = 'GAMEOVER';
+                addLoss(); // Solo death counts as a loss
                 document.getElementById('final-score').innerText = state.score;
                 document.getElementById('battle-result').innerText = "GAME OVER";
                 document.getElementById('ui-gameover').classList.remove('hidden');
@@ -450,6 +482,10 @@
                 if (p1.status === 'dead' && p2.status === 'dead') {
                     state.status = 'GAMEOVER';
                     const win = (state.playerId === 'p1' ? p1.score > p2.score : p2.score > p1.score);
+                    
+                    if (win) addWin();
+                    else addLoss();
+
                     document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
                     document.getElementById('final-score').innerText = state.score;
                     document.getElementById('ui-gameover').classList.remove('hidden');
@@ -508,6 +544,13 @@
         };
         document.getElementById('btn-go-home').onclick = () => backToHome();
         document.getElementById('btn-cancel-match').onclick = () => backToHome();
+        
+        // Username handling
+        document.getElementById('div-username').onclick = () => {
+            document.getElementById('username-input').value = state.username;
+            document.getElementById('ui-username').classList.remove('hidden');
+        };
+
         document.getElementById('btn-save-username').onclick = () => {
             const v = document.getElementById('username-input').value.trim();
             if (v.length < 2) return;
@@ -545,8 +588,11 @@
 
         canvas.addEventListener('mousedown', () => { initAudio(); jump(); });
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); jump(); });
+        
+        // Initial Stat Load
+        updateStatUI();
         requestAnimationFrame(loop);
-        document.getElementById('home-coins').innerText = state.coins;
+        document.getElementById('home-coins').innerText = state.coins || 0;
         document.getElementById('display-username').innerText = state.username || 'Identify Yourself';
     </script>
 </body>
