@@ -393,6 +393,7 @@
         function update(timeScale) {
             if (state.status !== 'PLAYING') return;
             state.clocks.forEach(c => c.angle += c.speed * timeScale);
+            
             if (state.pig.attachedTo !== null) {
                 const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
                 state.pig.x = c.x + Math.cos(c.angle) * c.radius;
@@ -408,9 +409,16 @@
                         playSound(220); break;
                     }
                 }
-                if (state.pig.y > state.cameraY + HEIGHT + 100) gameOver();
             }
+            
+            // Immediate death check: Horizontal edges or bottom edge
+            if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) {
+                gameOver();
+                return;
+            }
+            
             state.cameraY += (state.pig.y - HEIGHT/2 - state.cameraY) * 0.1 * timeScale;
+            
             if (state.isMultiplayer) {
                 db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score }).catch(()=>{});
             } else {
@@ -420,6 +428,8 @@
         }
 
         function gameOver() {
+            if (state.status !== 'PLAYING') return; // Prevent double trigger
+            
             if (state.isMultiplayer) {
                 db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' }).catch(()=>{});
                 checkWinner();
@@ -428,8 +438,8 @@
                 document.getElementById('final-score').innerText = state.score;
                 document.getElementById('battle-result').innerText = "GAME OVER";
                 document.getElementById('ui-gameover').classList.remove('hidden');
-                // Auto return to menu
-                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 2500);
+                // Auto return to menu - wait slightly so player sees where they died
+                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 1500);
             }
         }
 
@@ -444,7 +454,7 @@
                     document.getElementById('final-score').innerText = state.score;
                     document.getElementById('ui-gameover').classList.remove('hidden');
                     // Auto return to menu
-                    setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 4000);
+                    setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 2500);
                 }
             });
         }
