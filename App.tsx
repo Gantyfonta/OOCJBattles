@@ -1,0 +1,1 @@
+// This file is now redundant as the application has been moved to index.html for zero-build deployment.

@@ -1,0 +1,1 @@
+// Redundant UI component removed.
