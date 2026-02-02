@@ -35,6 +35,8 @@
         .spectate-banner { animation: slide-down 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .timer-glow { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.5)); }
+        .void-pulse { animation: void-pulse 2s ease-in-out infinite; }
+        @keyframes void-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 0.9; } }
     </style>
 </head>
 <body>
@@ -59,32 +61,36 @@
                 <p class="text-pink-300/60 font-bold tracking-widest text-[10px] uppercase">Online Swine Showdown</p>
             </div>
 
-            <div id="home-avatar-container" class="relative group cursor-pointer mb-4 active:scale-90 transition-transform">
+            <div id="home-avatar-container" class="relative group cursor-pointer mb-2 active:scale-90 transition-transform">
                 <div class="absolute -inset-4 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-colors"></div>
                 <canvas id="home-avatar-preview" width="120" height="120" class="relative"></canvas>
                 <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full border border-white/10 text-[8px] font-black uppercase tracking-widest customize-hint">Tap to Customize</div>
             </div>
             
-            <div class="flex flex-col gap-3 w-64 items-center">
-                <button id="btn-battle" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl text-xl transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none">
+            <div class="flex flex-col gap-2.5 w-64 items-center">
+                <button id="btn-battle" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-2xl text-lg transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none">
                     <span>DEATHMATCH</span>
-                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Last Pig Standing</span>
+                    <span class="text-[8px] opacity-60 mt-1 uppercase tracking-tighter">Last Pig Standing</span>
                 </button>
-                <button id="btn-timed-battle" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-4 rounded-2xl text-xl transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-pink-800">
+                <button id="btn-timed-battle" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-3.5 rounded-2xl text-lg transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-pink-800">
                     <span>TIMED BLITZ</span>
-                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">45s Score Race</span>
+                    <span class="text-[8px] opacity-60 mt-1 uppercase tracking-tighter">45s Score Race</span>
                 </button>
-                <button id="btn-solo" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-black py-2.5 rounded-2xl text-sm transition-all active:scale-95 shadow-xl uppercase tracking-widest">Solo Practice</button>
+                <button id="btn-surge-battle" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-3.5 rounded-2xl text-lg transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-purple-800">
+                    <span>VOID SURGE</span>
+                    <span class="text-[8px] opacity-60 mt-1 uppercase tracking-tighter">Outrun the Void</span>
+                </button>
+                <button id="btn-solo" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-black py-2 rounded-2xl text-xs transition-all active:scale-95 shadow-xl uppercase tracking-widest">Solo Practice</button>
                 
-                <div class="grid grid-cols-3 gap-2 w-full">
+                <div class="grid grid-cols-3 gap-2 w-full mt-1">
                     <button id="btn-skins" class="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-[10px] uppercase">SKINS</button>
                     <button id="btn-hats" class="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-[10px] uppercase">HATS</button>
                     <button id="btn-themes" class="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-[10px] uppercase">THEMES</button>
                 </div>
             </div>
 
-            <div class="mt-8 group cursor-pointer" id="div-username">
-                <div id="display-username" class="text-pink-400 font-black text-sm group-hover:underline">Identify Yourself</div>
+            <div class="mt-4 group cursor-pointer" id="div-username">
+                <div id="display-username" class="text-pink-400 font-black text-xs group-hover:underline">Identify Yourself</div>
             </div>
         </div>
 
@@ -142,10 +148,17 @@
                     <div id="score-val" class="text-3xl font-black text-pink-400 leading-none">0</div>
                 </div>
                 
-                <!-- Timer Display -->
+                <!-- Timer Display (for Timed mode) -->
                 <div id="ui-timer" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
                     <div class="bg-pink-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-pink-400/30 timer-glow">
                         <span id="timer-val" class="text-2xl tabular-nums">45</span><span class="text-[10px] ml-1">S</span>
+                    </div>
+                </div>
+
+                <!-- Alert for Surge mode -->
+                <div id="ui-surge-alert" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
+                    <div class="bg-purple-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-purple-400/30">
+                        <span class="text-xs uppercase tracking-widest animate-pulse">VOID RISING</span>
                     </div>
                 </div>
 
@@ -228,7 +241,7 @@
         ];
 
         let state = {
-            status: 'HOME', isMultiplayer: false, isTimedMode: false, roomId: null, playerId: null, score: 0,
+            status: 'HOME', isMultiplayer: false, isTimedMode: false, isSurgeMode: false, roomId: null, playerId: null, score: 0,
             selectedSkinId: localStorage.getItem('oinkSkin') || 'classic',
             selectedHatId: localStorage.getItem('oinkHatSelected') || 'none',
             selectedThemeId: localStorage.getItem('oinkTheme') || 'classic',
@@ -237,7 +250,7 @@
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
             pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false },
             opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none' },
-            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 45, matchStartTime: 0
+            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 45, matchStartTime: 0, voidY: HEIGHT + 200
         };
 
         const canvas = document.getElementById('gameCanvas');
@@ -284,6 +297,7 @@
             state.status = 'HOME';
             state.isMultiplayer = false;
             state.isTimedMode = false;
+            state.isSurgeMode = false;
             state.clocks = [];
             state.score = 0;
             state.cameraY = 0;
@@ -291,10 +305,10 @@
             state.pig.isDead = false;
             if (state.roomId) { db.ref('rooms/' + state.roomId).off(); state.roomId = null; }
             document.getElementById('ui-home').classList.remove('hidden');
-            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start', 'ui-spectate', 'ui-timer'].forEach(id => {
+            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start', 'ui-spectate', 'ui-timer', 'ui-surge-alert'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    if(id === 'ui-timer') el.style.opacity = '0';
+                    if(id === 'ui-timer' || id === 'ui-surge-alert') el.style.opacity = '0';
                     else el.classList.add('hidden');
                 }
             });
@@ -305,7 +319,10 @@
             if (!state.username) return document.getElementById('ui-username').classList.remove('hidden');
             state.status = 'MATCHMAKING';
             state.isTimedMode = (mode === 'timed');
-            document.getElementById('matchmaking-mode-label').innerText = mode === 'timed' ? "Searching Timed Blitz" : "Finding Opponent";
+            state.isSurgeMode = (mode === 'surge');
+            
+            const labels = { 'deathmatch': 'Finding Opponent', 'timed': 'Searching Timed Blitz', 'surge': 'Searching Void Surge' };
+            document.getElementById('matchmaking-mode-label').innerText = labels[mode] || "Finding Opponent";
             document.getElementById('ui-matchmaking').classList.remove('hidden');
             try {
                 const queueRef = db.ref('matchmaking_queue');
@@ -352,7 +369,7 @@
 
         function generateBattleClocks() {
             let cls = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, speed: 0.04, color: CLOCK_COLORS[0] }];
-            for(let i=1; i<200; i++) { // More clocks for timed race
+            for(let i=1; i<250; i++) {
                 const r = 35 + Math.random() * 50;
                 cls.push({ id: i, x: r + 20 + Math.random() * (WIDTH - r*2 - 40), y: HEIGHT-150-i*CLOCK_SPACING, radius: r, speed: (0.04 + (i*0.001))* (60/r) * (i%2===0?1:-1), color: CLOCK_COLORS[i%CLOCK_COLORS.length] });
             }
@@ -369,9 +386,11 @@
                 const oppId = role === 'p1' ? 'p2' : 'p1';
                 state.clocks = data.clocks;
                 state.isTimedMode = data.mode === 'timed';
+                state.isSurgeMode = data.mode === 'surge';
                 state.matchStartTime = data.startTime || (Date.now() + 3000);
                 
-                document.getElementById('battle-mode-header').innerText = state.isTimedMode ? "Timed Blitz" : "Deathmatch";
+                const modeLabels = { 'deathmatch': 'Deathmatch', 'timed': 'Timed Blitz', 'surge': 'Void Surge' };
+                document.getElementById('battle-mode-header').innerText = modeLabels[data.mode] || 'Deathmatch';
                 document.getElementById('opponent-hud').classList.remove('hidden');
                 
                 state.opponent.skin = data[oppId].skin || 'classic';
@@ -403,7 +422,7 @@
                     const oppScoreEl = document.getElementById('opponent-score-val');
                     if (oppScoreEl) oppScoreEl.innerText = d.score;
                     if (d.status === 'dead' && (state.status === 'PLAYING' || state.status === 'SPECTATING')) {
-                        if(!state.isTimedMode) checkWinner();
+                        if(!state.isTimedMode && !state.isSurgeMode) checkWinner();
                     }
                 }
             });
@@ -416,6 +435,7 @@
             state.cameraY = 0; 
             state.matchProcessed = false;
             state.timeLeft = 45;
+            state.voidY = HEIGHT + 200;
             state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
             
             const scoreEl = document.getElementById('score-val');
@@ -426,12 +446,12 @@
                 for(let i=1; i<10; i++) state.clocks.push(createSoloClock(i, HEIGHT-150-i*CLOCK_SPACING, i));
                 document.getElementById('opponent-hud').classList.add('hidden');
                 document.getElementById('ui-timer').style.opacity = '0';
+                document.getElementById('ui-surge-alert').style.opacity = '0';
             } else {
                 state.clocks.forEach(c => c.angle = -Math.PI/2);
                 document.getElementById('opponent-hud').classList.remove('hidden');
-                if(state.isTimedMode) {
-                    document.getElementById('ui-timer').style.opacity = '1';
-                }
+                document.getElementById('ui-timer').style.opacity = state.isTimedMode ? '1' : '0';
+                document.getElementById('ui-surge-alert').style.opacity = state.isSurgeMode ? '1' : '0';
                 db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ skin: state.selectedSkinId, hat: state.selectedHatId, status: 'playing' });
             }
             document.getElementById('ui-home').classList.add('hidden');
@@ -465,9 +485,18 @@
                 state.timeLeft = Math.max(0, totalSeconds - elapsed);
                 const timerEl = document.getElementById('timer-val');
                 if(timerEl) timerEl.innerText = Math.ceil(state.timeLeft);
+                if (state.timeLeft <= 0 && !state.matchProcessed) endTimedMatch();
+            }
+
+            // Update Void if Surge Mode
+            if (state.isSurgeMode) {
+                const baseVoidSpeed = 1.2;
+                const surgeSpeed = baseVoidSpeed + (state.score * 0.15);
+                state.voidY -= surgeSpeed * timeScale;
                 
-                if (state.timeLeft <= 0 && !state.matchProcessed) {
-                    endTimedMatch();
+                // If player is below void, game over
+                if (!state.pig.isDead && state.pig.y > state.voidY) {
+                    gameOver();
                 }
             }
 
@@ -492,8 +521,8 @@
                     }
                 }
                 
-                // Falling logic
-                if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) { 
+                // Falling logic (also death if too far below camera)
+                if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT + 100) { 
                     gameOver(); 
                 }
                 
@@ -510,7 +539,6 @@
 
         function gameOver() {
             if (state.isTimedMode) {
-                // Respawn logic for Timed Mode
                 state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
                 playSound(110);
                 return;
@@ -524,7 +552,8 @@
                     state.status = 'SPECTATING';
                     document.getElementById('ui-spectate').classList.remove('hidden');
                 } else {
-                    checkWinner();
+                    if (state.isSurgeMode) resolveSurgeMatch();
+                    else checkWinner();
                 }
             } else {
                 state.status = 'GAMEOVER';
@@ -534,6 +563,23 @@
                 document.getElementById('ui-gameover').classList.remove('hidden');
                 setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 1500);
             }
+        }
+
+        function resolveSurgeMatch() {
+            if (state.matchProcessed) return;
+            state.status = 'GAMEOVER';
+            db.ref('rooms/' + state.roomId).once('value', snap => {
+                const d = snap.val();
+                if (!d) return;
+                const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
+                const win = state.score > oppScore;
+                const draw = state.score === oppScore;
+                if (win) addWin(); else if (!draw) addLoss();
+                document.getElementById('battle-result').innerText = draw ? "DRAW!" : (win ? "VICTORY!" : "DEFEATED!");
+                document.getElementById('final-score').innerText = state.score;
+                document.getElementById('ui-gameover').classList.remove('hidden');
+                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
+            });
         }
 
         function endTimedMatch() {
@@ -548,21 +594,18 @@
                 const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
                 const win = state.score > oppScore;
                 const draw = state.score === oppScore;
-                
                 if (win) addWin(); else if (!draw) addLoss();
-                
                 document.getElementById('battle-result').innerText = draw ? "DRAW!" : (win ? "VICTORY!" : "DEFEATED!");
                 document.getElementById('final-score').innerText = state.score;
                 document.getElementById('ui-gameover').classList.remove('hidden');
                 document.getElementById('ui-timer').style.opacity = '0';
-                
                 setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
             });
         }
 
         let resolvingMatch = false;
         function checkWinner() {
-            if (state.matchProcessed || !state.isMultiplayer || resolvingMatch || state.isTimedMode) return;
+            if (state.matchProcessed || !state.isMultiplayer || resolvingMatch || state.isTimedMode || state.isSurgeMode) return;
             resolvingMatch = true;
             db.ref('rooms/' + state.roomId).once('value', snap => {
                 const d = snap.val(); 
@@ -584,28 +627,16 @@
         function drawPigAvatar(pctx, skin, x, y, scale = 1, rotation = 0, hatId = 'none') {
             if (!skin || !pctx) return;
             pctx.save(); pctx.translate(x, y); pctx.scale(scale, scale); pctx.rotate(rotation);
-            
-            // Draw body
             pctx.fillStyle = skin.body; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, 0, Math.PI*2); pctx.fill();
-            
-            // Special Tuxedo skin modification
             if (hatId === 'tuxedo') {
                 pctx.fillStyle = '#000'; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, Math.PI * 0.2, Math.PI * 1.8); pctx.lineTo(0, 0); pctx.fill();
                 pctx.fillStyle = '#fff'; pctx.beginPath(); pctx.moveTo(0, -6); pctx.lineTo(-6, 8); pctx.lineTo(6, 8); pctx.closePath(); pctx.fill();
                 pctx.fillStyle = '#000'; pctx.beginPath(); pctx.moveTo(-3, 0); pctx.lineTo(3, 4); pctx.lineTo(3, -4); pctx.closePath(); pctx.moveTo(3, 0); pctx.lineTo(-3, 4); pctx.lineTo(-3, -4); pctx.closePath(); pctx.fill();
             }
-            
-            // Draw ears
             pctx.fillStyle = skin.ears; pctx.beginPath(); pctx.moveTo(-14, -10); pctx.lineTo(-18, -20); pctx.lineTo(-6, -14); pctx.fill();
             pctx.beginPath(); pctx.moveTo(14, -10); pctx.lineTo(18, -20); pctx.lineTo(6, -14); pctx.fill();
-            
-            // Draw snout
             pctx.fillStyle = skin.snout; pctx.beginPath(); pctx.ellipse(0, 4, 8, 6, 0, 0, Math.PI*2); pctx.fill();
-            
-            // Draw eyes
             pctx.fillStyle = 'black'; pctx.beginPath(); pctx.arc(-7, -4, 2.5, 0, Math.PI*2); pctx.fill(); pctx.beginPath(); pctx.arc(7, -4, 2.5, 0, Math.PI*2); pctx.fill();
-            
-            // Draw hats
             if (hatId !== 'none' && hatId !== 'tuxedo') {
                 pctx.fillStyle = '#000';
                 if (hatId === 'tophat') pctx.fillRect(-10, -25, 20, 15);
@@ -624,17 +655,8 @@
                 }
                 if (hatId === 'crown') {
                     pctx.fillStyle = '#fbbf24';
-                    pctx.beginPath();
-                    pctx.moveTo(-12, -12);
-                    pctx.lineTo(-12, -22); pctx.lineTo(-6, -16);
-                    pctx.lineTo(0, -22);
-                    pctx.lineTo(6, -16);
-                    pctx.lineTo(12, -22);
-                    pctx.lineTo(12, -12);
-                    pctx.closePath();
-                    pctx.fill();
-                    pctx.fillStyle = '#ef4444';
-                    pctx.beginPath(); pctx.arc(0, -15, 1.5, 0, Math.PI*2); pctx.fill();
+                    pctx.beginPath(); pctx.moveTo(-12, -12); pctx.lineTo(-12, -22); pctx.lineTo(-6, -16); pctx.lineTo(0, -22); pctx.lineTo(6, -16); pctx.lineTo(12, -22); pctx.lineTo(12, -12); pctx.closePath(); pctx.fill();
+                    pctx.fillStyle = '#ef4444'; pctx.beginPath(); pctx.arc(0, -15, 1.5, 0, Math.PI*2); pctx.fill();
                 }
                 if (hatId === 'chef') {
                     pctx.fillStyle = 'white';
@@ -642,22 +664,16 @@
                     pctx.beginPath(); pctx.arc(0, -28, 10, 0, Math.PI*2); pctx.fill();
                 }
                 if (hatId === 'santa') {
-                    pctx.fillStyle = '#ef4444';
-                    pctx.beginPath(); pctx.moveTo(-10, -12); pctx.lineTo(10, -12); pctx.lineTo(0, -32); pctx.closePath(); pctx.fill();
-                    pctx.fillStyle = 'white';
-                    pctx.beginPath(); pctx.ellipse(0, -12, 11, 3, 0, 0, Math.PI*2); pctx.fill();
+                    pctx.fillStyle = '#ef4444'; pctx.beginPath(); pctx.moveTo(-10, -12); pctx.lineTo(10, -12); pctx.lineTo(0, -32); pctx.closePath(); pctx.fill();
+                    pctx.fillStyle = 'white'; pctx.beginPath(); pctx.ellipse(0, -12, 11, 3, 0, 0, Math.PI*2); pctx.fill();
                     pctx.beginPath(); pctx.arc(0, -32, 4, 0, Math.PI*2); pctx.fill();
                 }
                 if (hatId === 'pirate') {
-                    pctx.fillStyle = '#1e293b';
-                    pctx.beginPath(); pctx.ellipse(0, -14, 18, 8, 0, 0, Math.PI*2); pctx.fill();
-                    pctx.fillStyle = 'white';
-                    pctx.font = 'bold 8px Arial'; pctx.fillText('☠', -4, -13);
+                    pctx.fillStyle = '#1e293b'; pctx.beginPath(); pctx.ellipse(0, -14, 18, 8, 0, 0, Math.PI*2); pctx.fill();
+                    pctx.fillStyle = 'white'; pctx.font = 'bold 8px Arial'; pctx.fillText('☠', -4, -13);
                 }
                 if (hatId === 'halo') {
-                    pctx.strokeStyle = '#fde047';
-                    pctx.lineWidth = 3;
-                    pctx.beginPath(); pctx.ellipse(0, -26, 12, 4, 0, 0, Math.PI*2); pctx.stroke();
+                    pctx.strokeStyle = '#fde047'; pctx.lineWidth = 3; pctx.beginPath(); pctx.ellipse(0, -26, 12, 4, 0, 0, Math.PI*2); pctx.stroke();
                     pctx.shadowBlur = 10; pctx.shadowColor = '#fde047'; pctx.stroke(); pctx.shadowBlur = 0;
                 }
             }
@@ -692,6 +708,20 @@
                 drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat);
                 ctx.globalAlpha = 1.0;
             }
+
+            // Draw Void for Surge Mode
+            if (state.isSurgeMode) {
+                const grad = ctx.createLinearGradient(0, state.voidY, 0, state.voidY + 600);
+                grad.addColorStop(0, 'rgba(147, 51, 234, 0.8)'); // Purple-600
+                grad.addColorStop(0.2, 'rgba(88, 28, 135, 0.6)'); // Purple-900
+                grad.addColorStop(1, 'rgba(15, 23, 42, 0.4)'); // Deep background
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, state.voidY, WIDTH, 1000);
+                // Pulse edge
+                ctx.strokeStyle = 'rgba(192, 132, 252, 0.8)';
+                ctx.lineWidth = 4 + Math.sin(Date.now()/200) * 2;
+                ctx.beginPath(); ctx.moveTo(0, state.voidY); ctx.lineTo(WIDTH, state.voidY); ctx.stroke();
+            }
             ctx.restore();
         }
 
@@ -701,7 +731,8 @@
             const bind = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
             bind('btn-battle', () => startMatchmaking('deathmatch'));
             bind('btn-timed-battle', () => startMatchmaking('timed'));
-            bind('btn-solo', () => { state.isMultiplayer = false; state.isTimedMode = false; startGame(); });
+            bind('btn-surge-battle', () => startMatchmaking('surge'));
+            bind('btn-solo', () => { state.isMultiplayer = false; state.isTimedMode = false; state.isSurgeMode = false; startGame(); });
             bind('btn-go-home', backToHome);
             bind('btn-cancel-match', backToHome);
             bind('div-username', () => { 
