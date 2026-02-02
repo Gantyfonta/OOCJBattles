@@ -34,6 +34,7 @@
         @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
         .spectate-banner { animation: slide-down 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .timer-glow { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.5)); }
     </style>
 </head>
 <body>
@@ -58,7 +59,7 @@
                 <p class="text-pink-300/60 font-bold tracking-widest text-[10px] uppercase">Online Swine Showdown</p>
             </div>
 
-            <div id="home-avatar-container" class="relative group cursor-pointer mb-6 active:scale-90 transition-transform">
+            <div id="home-avatar-container" class="relative group cursor-pointer mb-4 active:scale-90 transition-transform">
                 <div class="absolute -inset-4 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-colors"></div>
                 <canvas id="home-avatar-preview" width="120" height="120" class="relative"></canvas>
                 <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full border border-white/10 text-[8px] font-black uppercase tracking-widest customize-hint">Tap to Customize</div>
@@ -66,10 +67,14 @@
             
             <div class="flex flex-col gap-3 w-64 items-center">
                 <button id="btn-battle" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl text-xl transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none">
-                    <span>BATTLE ONLINE</span>
-                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Real-time Versus Mode</span>
+                    <span>DEATHMATCH</span>
+                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Last Pig Standing</span>
                 </button>
-                <button id="btn-solo" class="w-full bg-pink-500 hover:bg-pink-400 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl uppercase border-b-4 border-pink-700">Solo Practice</button>
+                <button id="btn-timed-battle" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-4 rounded-2xl text-xl transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-pink-800">
+                    <span>TIMED BLITZ</span>
+                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">60s Score Race</span>
+                </button>
+                <button id="btn-solo" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-black py-2.5 rounded-2xl text-sm transition-all active:scale-95 shadow-xl uppercase tracking-widest">Solo Practice</button>
                 
                 <div class="grid grid-cols-3 gap-2 w-full">
                     <button id="btn-skins" class="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-[10px] uppercase">SKINS</button>
@@ -89,13 +94,14 @@
                 <div class="absolute inset-0 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
                 <div class="absolute inset-0 flex items-center justify-center text-4xl">🐷</div>
             </div>
-            <h2 class="text-2xl font-black mb-2 uppercase italic searching-dots">Finding Opponent</h2>
+            <h2 id="matchmaking-mode-label" class="text-2xl font-black mb-2 uppercase italic searching-dots">Finding Opponent</h2>
             <p class="text-xs text-white/40 mb-8 max-w-xs">Scanning for rivals...</p>
             <button id="btn-cancel-match" class="text-[10px] font-bold text-white/30 hover:text-white uppercase tracking-widest border border-white/10 px-6 py-2 rounded-full">Cancel</button>
         </div>
 
         <!-- Battle Start Screen -->
         <div id="ui-battle-start" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950 z-[70] text-white hidden">
+            <div id="battle-mode-header" class="mb-8 bg-pink-600/20 px-4 py-1 rounded text-xs font-black uppercase tracking-widest text-pink-400 border border-pink-500/30">Deathmatch</div>
             <div class="flex items-center gap-8 mb-8">
                 <div class="flex flex-col items-center">
                     <div class="w-20 h-20 bg-pink-500/20 rounded-2xl border-2 border-pink-500 mb-2 flex items-center justify-center">
@@ -135,6 +141,14 @@
                     <div class="text-[8px] font-bold uppercase opacity-60 tracking-widest mb-0.5">YOU</div>
                     <div id="score-val" class="text-3xl font-black text-pink-400 leading-none">0</div>
                 </div>
+                
+                <!-- Timer Display -->
+                <div id="ui-timer" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
+                    <div class="bg-pink-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-pink-400/30 timer-glow">
+                        <span id="timer-val" class="text-2xl tabular-nums">60</span><span class="text-[10px] ml-1">S</span>
+                    </div>
+                </div>
+
                 <div id="opponent-hud" class="bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5 text-right hidden">
                     <div class="text-[8px] font-bold uppercase opacity-60 tracking-widest mb-0.5">OPPONENT</div>
                     <div id="opponent-score-val" class="text-3xl font-black text-indigo-400 leading-none">0</div>
@@ -195,7 +209,7 @@
         ];
 
         let state = {
-            status: 'HOME', isMultiplayer: false, roomId: null, playerId: null, score: 0,
+            status: 'HOME', isMultiplayer: false, isTimedMode: false, roomId: null, playerId: null, score: 0,
             selectedSkinId: localStorage.getItem('oinkSkin') || 'classic',
             selectedHatId: localStorage.getItem('oinkHatSelected') || 'none',
             selectedThemeId: localStorage.getItem('oinkTheme') || 'classic',
@@ -204,7 +218,7 @@
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
             pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false },
             opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none' },
-            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false
+            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 60, matchStartTime: 0
         };
 
         const canvas = document.getElementById('gameCanvas');
@@ -250,6 +264,7 @@
         function backToHome() {
             state.status = 'HOME';
             state.isMultiplayer = false;
+            state.isTimedMode = false;
             state.clocks = [];
             state.score = 0;
             state.cameraY = 0;
@@ -257,38 +272,43 @@
             state.pig.isDead = false;
             if (state.roomId) { db.ref('rooms/' + state.roomId).off(); state.roomId = null; }
             document.getElementById('ui-home').classList.remove('hidden');
-            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start', 'ui-spectate'].forEach(id => {
+            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start', 'ui-spectate', 'ui-timer'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.classList.add('hidden');
+                if (el) {
+                    if(id === 'ui-timer') el.style.opacity = '0';
+                    else el.classList.add('hidden');
+                }
             });
             updateStatUI();
         }
 
-        async function startMatchmaking() {
+        async function startMatchmaking(mode = 'deathmatch') {
             if (!state.username) return document.getElementById('ui-username').classList.remove('hidden');
             state.status = 'MATCHMAKING';
+            state.isTimedMode = (mode === 'timed');
+            document.getElementById('matchmaking-mode-label').innerText = mode === 'timed' ? "Searching Timed Blitz" : "Finding Opponent";
             document.getElementById('ui-matchmaking').classList.remove('hidden');
             try {
                 const queueRef = db.ref('matchmaking_queue');
-                await queueRef.update({ [state.username]: Date.now() });
+                await queueRef.update({ [state.username]: { time: Date.now(), mode } });
                 const roomsSnap = await db.ref('rooms').once('value');
                 let found = false;
                 roomsSnap.forEach(snap => {
                     const room = snap.val();
-                    if (room && room.status === 'waiting' && room.p1 && room.p1.name !== state.username) { 
+                    if (room && room.status === 'waiting' && room.mode === mode && room.p1 && room.p1.name !== state.username) { 
                         joinRoom(snap.key); found = true; return true; 
                     }
                 });
-                if (!found) waitForOpponent();
+                if (!found) waitForOpponent(mode);
             } catch (e) { console.error(e); document.getElementById('ui-matchmaking').classList.add('hidden'); }
         }
 
-        function waitForOpponent() {
+        function waitForOpponent(mode) {
             const rCode = "room_" + state.username + "_" + Date.now().toString().slice(-4);
             state.roomId = rCode; state.playerId = 'p1';
             db.ref('rooms/' + rCode).set({
                 p1: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0, status: 'playing' },
-                status: 'waiting', theme: state.selectedThemeId
+                status: 'waiting', theme: state.selectedThemeId, mode: mode
             });
             db.ref('rooms/' + rCode).on('value', snap => {
                 const data = snap.val();
@@ -304,7 +324,8 @@
                 await db.ref('rooms/' + rCode).update({
                     p2: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0, status: 'playing' },
                     clocks: generateBattleClocks(),
-                    status: 'playing'
+                    status: 'playing',
+                    startTime: Date.now() + 3000 // Match starts 3s from now
                 });
                 startBattle(rCode, 'p2');
             } catch(e) { console.error(e); }
@@ -312,7 +333,7 @@
 
         function generateBattleClocks() {
             let cls = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, speed: 0.04, color: CLOCK_COLORS[0] }];
-            for(let i=1; i<100; i++) {
+            for(let i=1; i<200; i++) { // More clocks for timed race
                 const r = 35 + Math.random() * 50;
                 cls.push({ id: i, x: r + 20 + Math.random() * (WIDTH - r*2 - 40), y: HEIGHT-150-i*CLOCK_SPACING, radius: r, speed: (0.04 + (i*0.001))* (60/r) * (i%2===0?1:-1), color: CLOCK_COLORS[i%CLOCK_COLORS.length] });
             }
@@ -323,10 +344,17 @@
             state.status = 'BATTLE_START'; state.isMultiplayer = true; state.matchProcessed = false;
             document.getElementById('ui-matchmaking').classList.add('hidden');
             document.getElementById('ui-battle-start').classList.remove('hidden');
+            
             db.ref('rooms/' + rCode).once('value', snap => {
                 const data = snap.val(); if (!data) return backToHome();
                 const oppId = role === 'p1' ? 'p2' : 'p1';
                 state.clocks = data.clocks;
+                state.isTimedMode = data.mode === 'timed';
+                state.matchStartTime = data.startTime || (Date.now() + 3000);
+                
+                document.getElementById('battle-mode-header').innerText = state.isTimedMode ? "Timed Blitz" : "Deathmatch";
+                document.getElementById('opponent-hud').classList.remove('hidden');
+                
                 state.opponent.skin = data[oppId].skin || 'classic';
                 state.opponent.hat = data[oppId].hat || 'none';
                 document.getElementById('p1-name').innerText = data[role].name;
@@ -334,13 +362,19 @@
                 drawPigAvatar(document.getElementById('p1-preview').getContext('2d'), SKINS.find(s=>s.id===data[role].skin), 32, 32, 1, 0, data[role].hat);
                 drawPigAvatar(document.getElementById('p2-preview').getContext('2d'), SKINS.find(s=>s.id===data[oppId].skin), 32, 32, 1, 0, data[oppId].hat);
             });
+            
             let count = 3;
             const cd = setInterval(() => {
                 count--;
                 const el = document.getElementById('battle-countdown');
                 if (el) el.innerText = count > 0 ? count : "OINK!";
-                if (count <= -1) { clearInterval(cd); document.getElementById('ui-battle-start').classList.add('hidden'); startGame(); }
+                if (count <= -1) { 
+                    clearInterval(cd); 
+                    document.getElementById('ui-battle-start').classList.add('hidden'); 
+                    startGame(); 
+                }
             }, 1000);
+            
             const oppId = role === 'p1' ? 'p2' : 'p1';
             db.ref('rooms/' + rCode + '/' + oppId).on('value', snap => {
                 const d = snap.val();
@@ -349,23 +383,36 @@
                     state.opponent.status = d.status; state.opponent.skin = d.skin; state.opponent.hat = d.hat;
                     const oppScoreEl = document.getElementById('opponent-score-val');
                     if (oppScoreEl) oppScoreEl.innerText = d.score;
-                    if (d.status === 'dead' && (state.status === 'PLAYING' || state.status === 'SPECTATING')) checkWinner();
+                    if (d.status === 'dead' && (state.status === 'PLAYING' || state.status === 'SPECTATING')) {
+                        if(!state.isTimedMode) checkWinner();
+                    }
                 }
             });
         }
 
         function startGame() {
-            initAudio(); state.status = 'PLAYING'; state.score = 0; state.cameraY = 0; state.matchProcessed = false;
+            initAudio(); 
+            state.status = 'PLAYING'; 
+            state.score = 0; 
+            state.cameraY = 0; 
+            state.matchProcessed = false;
+            state.timeLeft = 60;
             state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
+            
             const scoreEl = document.getElementById('score-val');
             if (scoreEl) scoreEl.innerText = "0";
+            
             if (!state.isMultiplayer) {
                 state.clocks = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, angle: -Math.PI/2, speed: 0.04, color: CLOCK_COLORS[0] }];
                 for(let i=1; i<10; i++) state.clocks.push(createSoloClock(i, HEIGHT-150-i*CLOCK_SPACING, i));
                 document.getElementById('opponent-hud').classList.add('hidden');
+                document.getElementById('ui-timer').style.opacity = '0';
             } else {
                 state.clocks.forEach(c => c.angle = -Math.PI/2);
                 document.getElementById('opponent-hud').classList.remove('hidden');
+                if(state.isTimedMode) {
+                    document.getElementById('ui-timer').style.opacity = '1';
+                }
                 db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ skin: state.selectedSkinId, hat: state.selectedHatId, status: 'playing' });
             }
             document.getElementById('ui-home').classList.add('hidden');
@@ -391,6 +438,20 @@
             if (state.status !== 'PLAYING' && state.status !== 'SPECTATING') return;
             state.clocks.forEach(c => c.angle += c.speed * timeScale);
             
+            // Update Timer if Timed Mode
+            if (state.isTimedMode && state.isMultiplayer) {
+                const now = Date.now();
+                const totalSeconds = 60;
+                const elapsed = (now - state.matchStartTime) / 1000;
+                state.timeLeft = Math.max(0, totalSeconds - elapsed);
+                const timerEl = document.getElementById('timer-val');
+                if(timerEl) timerEl.innerText = Math.ceil(state.timeLeft);
+                
+                if (state.timeLeft <= 0 && !state.matchProcessed) {
+                    endTimedMatch();
+                }
+            }
+
             let cameraTargetY = state.pig.y;
             
             if (state.status === 'SPECTATING') {
@@ -411,7 +472,12 @@
                         }
                     }
                 }
-                if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) { gameOver(); }
+                
+                // Falling logic
+                if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) { 
+                    gameOver(); 
+                }
+                
                 cameraTargetY = state.pig.y;
                 if (state.isMultiplayer && state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score });
                 else if (!state.isMultiplayer) {
@@ -424,11 +490,17 @@
         }
 
         function gameOver() {
+            if (state.isTimedMode) {
+                // Respawn logic for Timed Mode
+                state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
+                playSound(110);
+                return;
+            }
+
             if (state.pig.isDead) return;
             state.pig.isDead = true;
             if (state.isMultiplayer) {
                 if(state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
-                // If opponent still alive, switch to spectate
                 if (state.opponent.status === 'playing') {
                     state.status = 'SPECTATING';
                     document.getElementById('ui-spectate').classList.remove('hidden');
@@ -445,9 +517,33 @@
             }
         }
 
+        function endTimedMatch() {
+            if (state.matchProcessed) return;
+            state.status = 'GAMEOVER';
+            state.pig.isDead = true;
+            if (state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
+            
+            db.ref('rooms/' + state.roomId).once('value', snap => {
+                const d = snap.val();
+                if (!d) return;
+                const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
+                const win = state.score > oppScore;
+                const draw = state.score === oppScore;
+                
+                if (win) addWin(); else if (!draw) addLoss();
+                
+                document.getElementById('battle-result').innerText = draw ? "DRAW!" : (win ? "VICTORY!" : "DEFEATED!");
+                document.getElementById('final-score').innerText = state.score;
+                document.getElementById('ui-gameover').classList.remove('hidden');
+                document.getElementById('ui-timer').style.opacity = '0';
+                
+                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
+            });
+        }
+
         let resolvingMatch = false;
         function checkWinner() {
-            if (state.matchProcessed || !state.isMultiplayer || resolvingMatch) return;
+            if (state.matchProcessed || !state.isMultiplayer || resolvingMatch || state.isTimedMode) return;
             resolvingMatch = true;
             db.ref('rooms/' + state.roomId).once('value', snap => {
                 const d = snap.val(); 
@@ -518,7 +614,6 @@
             
             // Draw opponent
             if (state.isMultiplayer) {
-                // If I'm spectating, make opponent more prominent
                 ctx.globalAlpha = state.status === 'SPECTATING' ? 1.0 : 0.5;
                 drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat);
                 ctx.globalAlpha = 1.0;
@@ -530,8 +625,9 @@
 
         function initUI() {
             const bind = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
-            bind('btn-battle', startMatchmaking);
-            bind('btn-solo', () => { state.isMultiplayer = false; startGame(); });
+            bind('btn-battle', () => startMatchmaking('deathmatch'));
+            bind('btn-timed-battle', () => startMatchmaking('timed'));
+            bind('btn-solo', () => { state.isMultiplayer = false; state.isTimedMode = false; startGame(); });
             bind('btn-go-home', backToHome);
             bind('btn-cancel-match', backToHome);
             bind('div-username', () => { 
