@@ -108,7 +108,7 @@
             </div>
 
             <div class="mt-4 group cursor-pointer" id="div-username">
-                <div id="display-username" class="text-pink-400 font-black text-xs group-hover:underline">Identify Yourself</div>
+                <div id="display-username" class="text-pink-400 font-black text-xs group-hover:underline">Label Your Bacon</div>
             </div>
         </div>
 
@@ -118,7 +118,7 @@
                 <div class="absolute inset-0 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
                 <div class="absolute inset-0 flex items-center justify-center text-4xl">🐷</div>
             </div>
-            <h2 id="matchmaking-mode-label" class="text-2xl font-black mb-2 uppercase italic searching-dots">Finding Opponent</h2>
+            <h2 id="matchmaking-mode-label" class="text-2xl font-black mb-2 uppercase italic searching-dots">Sniffing for Truffles</h2>
             <p class="text-xs text-white/40 mb-8 max-w-xs">Scanning for rivals...</p>
             <button id="btn-cancel-match" class="text-[10px] font-bold text-white/30 hover:text-white uppercase tracking-widest border border-white/10 px-6 py-2 rounded-full">Cancel</button>
         </div>
@@ -138,7 +138,7 @@
                     <div class="w-20 h-20 bg-indigo-500/20 rounded-2xl border-2 border-indigo-500 mb-2 flex items-center justify-center">
                         <canvas id="p2-preview" width="64" height="64"></canvas>
                     </div>
-                    <span id="p2-name" class="font-black text-sm uppercase">RIVAL</span>
+                    <span id="p2-name" class="font-black text-sm uppercase">BACON RIVAL</span>
                 </div>
             </div>
             <h2 id="battle-countdown" class="text-6xl font-black italic">3</h2>
@@ -190,24 +190,24 @@
             <div id="ui-spectate" class="w-full flex justify-center hidden">
                 <div class="bg-indigo-600/90 spectate-banner text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-2xl border border-indigo-400/30 flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-                    Spectating Opponent
+                    Spectating Swine
                 </div>
             </div>
         </div>
 
         <!-- Game Over -->
         <div id="ui-gameover" class="absolute inset-0 flex flex-col items-center justify-center bg-red-950/90 backdrop-blur-md z-[55] text-white p-6 text-center hidden">
-            <h2 id="battle-result" class="text-5xl font-black mb-1 uppercase tracking-tighter">YOU LOST!</h2>
+            <h2 id="battle-result" class="text-5xl font-black mb-1 uppercase tracking-tighter">YOU GOT ROASTED!</h2>
             <div class="text-7xl font-black text-pink-400 mb-2" id="final-score">0</div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-8">Returning to menu...</p>
-            <button id="btn-go-home" class="bg-white text-indigo-900 font-black py-4 px-12 rounded-xl text-2xl w-64 active:scale-95 transition-transform uppercase">HOME</button>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-8">Heading back to the mud...</p>
+            <button id="btn-go-home" class="bg-white text-indigo-900 font-black py-4 px-12 rounded-xl text-2xl w-64 active:scale-95 transition-transform uppercase">THE MUD PIT</button>
         </div>
 
         <!-- Username -->
         <div id="ui-username" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/95 backdrop-blur-md z-[60] text-white p-6 text-center hidden">
-            <h2 class="text-2xl font-black mb-2 uppercase italic">Identify Yourself</h2>
+            <h2 class="text-2xl font-black mb-2 uppercase italic">Label Your Bacon</h2>
             <input type="text" id="username-input" maxlength="12" placeholder="PIG-NAME" class="w-64 bg-indigo-900 border-2 border-pink-500/30 text-white text-center py-3 rounded-xl font-bold mb-4 focus:outline-none focus:border-pink-500">
-            <button id="btn-save-username" class="bg-pink-500 text-white font-black py-3 px-12 rounded-xl text-lg w-64 uppercase">CONFIRM</button>
+            <button id="btn-save-username" class="bg-pink-500 text-white font-black py-3 px-12 rounded-xl text-lg w-64 uppercase">OINK!</button>
         </div>
     </div>
 
@@ -244,6 +244,7 @@
 
         const WIDTH = 400; const HEIGHT = 700; const CLOCK_SPACING = 260; const JUMP_SPEED = 14;
         const CLOCK_COLORS = ['#F472B6', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#FB923C'];
+        const BOT_NAMES = ["MasterBoter", "BottyMcBotface", "Sir Oinks-A-Lot", "CyberHam", "RoboPig", "GlitchGrunter", "TechnoTrotter", "AI-nkler", "Clockjumper67"];
         const SKINS = [
             { id: 'classic', name: 'Classic Oink', body: '#F472B6', ears: '#EC4899', snout: '#F9A8D4' },
             { id: 'neon', name: 'Neon Hog', body: '#000000', ears: '#3B82F6', snout: '#60A5FA' },
@@ -286,8 +287,8 @@
             wins: parseInt(localStorage.getItem('oinkWins')) || 0,
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
             pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false },
-            bot: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0 },
-            opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none' },
+            bot: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: '' },
+            opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none', name: 'RIVAL' },
             clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 45, matchStartTime: 0, voidY: HEIGHT + 200
         };
 
@@ -357,8 +358,8 @@
             state.isTimedMode = (mode === 'timed');
             state.isSurgeMode = (mode === 'surge');
             
-            const labels = { 'deathmatch': 'Finding Opponent', 'timed': 'Searching Timed Blitz', 'surge': 'Searching Void Surge' };
-            document.getElementById('matchmaking-mode-label').innerText = labels[mode] || "Finding Opponent";
+            const labels = { 'deathmatch': 'Sniffing for Truffles', 'timed': 'Searching Timed Blitz', 'surge': 'Searching Void Surge' };
+            document.getElementById('matchmaking-mode-label').innerText = labels[mode] || "Sniffing for Truffles";
             document.getElementById('ui-matchmaking').classList.remove('hidden');
             try {
                 const queueRef = db.ref('matchmaking_queue');
@@ -427,10 +428,11 @@
                 
                 document.getElementById('battle-mode-header').innerText = data.mode.toUpperCase();
                 document.getElementById('opponent-hud').classList.remove('hidden');
-                document.getElementById('opponent-label').innerText = 'OPPONENT';
+                document.getElementById('opponent-label').innerText = 'BACON RIVAL';
                 
                 state.opponent.skin = data[oppId].skin || 'classic';
                 state.opponent.hat = data[oppId].hat || 'none';
+                state.opponent.name = data[oppId].name || 'RIVAL';
                 document.getElementById('p1-name').innerText = data[role].name;
                 document.getElementById('p2-name').innerText = data[oppId].name;
                 drawPigAvatar(document.getElementById('p1-preview').getContext('2d'), SKINS.find(s=>s.id===data[role].skin), 32, 32, 1, 0, data[role].hat);
@@ -452,7 +454,7 @@
                 const d = snap.val();
                 if (d) {
                     state.opponent.x = d.x; state.opponent.y = d.y; state.opponent.score = d.score;
-                    state.opponent.status = d.status; state.opponent.skin = d.skin; state.opponent.hat = d.hat;
+                    state.opponent.status = d.status; state.opponent.skin = d.skin; state.opponent.hat = d.hat; state.opponent.name = d.name;
                     const oppScoreEl = document.getElementById('opponent-score-val');
                     if (oppScoreEl) oppScoreEl.innerText = d.score;
                     if (d.status === 'dead' && (state.status === 'PLAYING' || state.status === 'SPECTATING')) {
@@ -480,9 +482,10 @@
                 for(let i=1; i<250; i++) state.clocks.push(createSoloClock(i, HEIGHT-150-i*CLOCK_SPACING, i));
                 
                 if (state.isBotActive) {
-                    state.bot = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0 };
+                    const botName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+                    state.bot = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: botName };
                     document.getElementById('opponent-hud').classList.remove('hidden');
-                    document.getElementById('opponent-label').innerText = 'NEURAL-OINK';
+                    document.getElementById('opponent-label').innerText = 'MECHA-HAM';
                     document.getElementById('opponent-score-val').innerText = '0';
                 } else {
                     document.getElementById('opponent-hud').classList.add('hidden');
@@ -524,21 +527,18 @@
                 const nextClock = state.clocks.find(cl => cl.id === state.bot.score + 1);
                 
                 if (nextClock) {
-                    // Calculate angle to next clock
                     const dx = nextClock.x - c.x;
                     const dy = nextClock.y - c.y;
                     let targetAngle = Math.atan2(dy, dx);
                     
-                    // Simple AI decision window: jump when close to target angle
                     let diff = Math.abs(c.angle % (Math.PI * 2) - targetAngle % (Math.PI * 2));
                     if (diff > Math.PI) diff = Math.PI * 2 - diff;
 
                     if (diff < 0.15 && state.bot.jumpCooldown <= 0) {
-                        // JUMP!
                         state.bot.vx = Math.cos(c.angle) * JUMP_SPEED;
                         state.bot.vy = Math.sin(c.angle) * JUMP_SPEED;
                         state.bot.attachedTo = null;
-                        state.bot.jumpCooldown = 20; // prevent rapid-fire jumps
+                        state.bot.jumpCooldown = 20; 
                     }
                 }
                 
@@ -550,13 +550,13 @@
                 state.bot.x += state.bot.vx * timeScale;
                 state.bot.y += state.bot.vy * timeScale;
                 
-                // Collision with clocks
                 for (const c of state.clocks) {
                     if (Math.sqrt((state.bot.x-c.x)**2 + (state.bot.y-c.y)**2) < c.radius + 10) {
                         state.bot.attachedTo = c.id;
                         if (c.id > state.bot.score) {
                             state.bot.score = c.id;
-                            document.getElementById('opponent-score-val').innerText = state.bot.score;
+                            const scoreEl = document.getElementById('opponent-score-val');
+                            if (scoreEl) scoreEl.innerText = state.bot.score;
                         }
                         break;
                     }
@@ -564,8 +564,6 @@
             }
 
             if (state.bot.jumpCooldown > 0) state.bot.jumpCooldown -= timeScale;
-
-            // Death check for bot
             if (state.bot.x < 0 || state.bot.x > WIDTH || state.bot.y > state.cameraY + HEIGHT + 100) {
                 state.bot.isDead = true;
             }
@@ -707,6 +705,19 @@
             });
         }
 
+        function drawUsername(pctx, name, x, y) {
+            if (!name) return;
+            pctx.save();
+            pctx.font = 'bold 12px Inter';
+            pctx.textAlign = 'center';
+            pctx.strokeStyle = '#000';
+            pctx.lineWidth = 3;
+            pctx.strokeText(name.toUpperCase(), x, y - 30);
+            pctx.fillStyle = '#fff';
+            pctx.fillText(name.toUpperCase(), x, y - 30);
+            pctx.restore();
+        }
+
         function drawPigAvatar(pctx, skin, x, y, scale = 1, rotation = 0, hatId = 'none') {
             if (!skin || !pctx) return;
             pctx.save(); pctx.translate(x, y); pctx.scale(scale, scale); pctx.rotate(rotation);
@@ -754,18 +765,21 @@
             if (!state.pig.isDead || state.status === 'SPECTATING') {
                 ctx.globalAlpha = state.status === 'SPECTATING' ? 0.3 : 1.0;
                 drawPigAvatar(ctx, SKINS.find(s=>s.id===state.selectedSkinId), state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
+                drawUsername(ctx, state.username || 'YOU', state.pig.x, state.pig.y);
                 ctx.globalAlpha = 1.0;
             }
             
             if (state.isMultiplayer) {
                 ctx.globalAlpha = state.status === 'SPECTATING' ? 1.0 : 0.5;
                 drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat);
+                drawUsername(ctx, state.opponent.name, state.opponent.x, state.opponent.y);
                 ctx.globalAlpha = 1.0;
             }
 
             if (state.isBotActive && !state.bot.isDead) {
                 ctx.globalAlpha = 0.6;
                 drawPigAvatar(ctx, SKINS.find(s=>s.id==='cyber'), state.bot.x, state.bot.y, 1, 0, 'propeller');
+                drawUsername(ctx, state.bot.name, state.bot.x, state.bot.y);
                 ctx.globalAlpha = 1.0;
             }
 
@@ -829,7 +843,7 @@
         window.addEventListener('keydown', (e) => { if (e.code === 'Space' && state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
         
         updateStatUI(); initUI(); requestAnimationFrame(loop);
-        const disp = document.getElementById('display-username'); if(disp) disp.innerText = state.username || 'Identify Yourself';
+        const disp = document.getElementById('display-username'); if(disp) disp.innerText = state.username || 'Label Your Bacon';
     </script>
 </body>
 </html>
