@@ -32,7 +32,10 @@
         @keyframes slide-in-top { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .searching-dots::after { content: '...'; animation: dots 1.5s steps(4, end) infinite; }
         @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80% { content: '...'; } }
-        .noir-mode { filter: grayscale(100%) contrast(120%); }
+        
+        /* Pulse for customization hint */
+        .customize-hint { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -59,9 +62,16 @@
                 <div id="home-coins" class="text-sm font-black">0</div>
             </div>
 
-            <div class="mb-6">
+            <div class="mb-2">
                 <h1 class="text-5xl font-black mb-1 tracking-tighter text-pink-400 drop-shadow-lg leading-none">OINK BATTLE</h1>
                 <p class="text-pink-300/60 font-bold tracking-widest text-[10px] uppercase">Online Swine Showdown</p>
+            </div>
+
+            <!-- Avatar Preview (Clickable for customization) -->
+            <div id="home-avatar-container" class="relative group cursor-pointer mb-6 active:scale-90 transition-transform">
+                <div class="absolute -inset-4 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-colors"></div>
+                <canvas id="home-avatar-preview" width="120" height="120" class="relative"></canvas>
+                <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full border border-white/10 text-[8px] font-black uppercase tracking-widest customize-hint">Tap to Customize</div>
             </div>
             
             <div class="flex flex-col gap-3 w-64 items-center">
@@ -69,7 +79,7 @@
                     <span>BATTLE ONLINE</span>
                     <span id="conn-status" class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Real-time Versus Mode</span>
                 </button>
-                <button id="btn-solo" class="w-full bg-pink-500 hover:bg-pink-400 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl uppercase">Solo Practice</button>
+                <button id="btn-solo" class="w-full bg-pink-500 hover:bg-pink-400 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl uppercase border-b-4 border-pink-700">Solo Practice</button>
                 
                 <div class="grid grid-cols-3 gap-2 w-full">
                     <button id="btn-skins" class="bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-[10px] uppercase">SKINS</button>
@@ -80,33 +90,6 @@
 
             <div class="mt-8 group cursor-pointer" id="div-username">
                 <div id="display-username" class="text-pink-400 font-black text-sm group-hover:underline">Identify Yourself</div>
-            </div>
-        </div>
-
-        <!-- Firebase Permission Fix Modal -->
-        <div id="ui-perm-error" class="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-[100] text-white p-8 text-center hidden">
-            <div class="text-5xl mb-4">⚠️</div>
-            <h2 class="text-xl font-black mb-4 text-red-500 uppercase">Permission Denied</h2>
-            <div class="text-xs text-left bg-indigo-900/50 p-4 rounded-xl border border-white/10 mb-6 space-y-2 overflow-y-auto max-h-64">
-                <p>Firebase is blocking access. To fix this:</p>
-                <ol class="list-decimal ml-4 space-y-1 opacity-80">
-                    <li>Open <b>Firebase Console</b></li>
-                    <li>Go to <b>Realtime Database</b></li>
-                    <li>Click the <b>Rules</b> tab</li>
-                    <li>Set them to:</li>
-                </ol>
-                <pre class="bg-black/50 p-2 rounded text-[10px] text-pink-300">
-{
-  "rules": {
-    ".read": true,
-    ".write": true
-  }
-}</pre>
-                <p class="opacity-60 italic">Note: Use public rules only for development.</p>
-            </div>
-            <div class="flex flex-col gap-2 w-full">
-                <button onclick="backToHome()" class="bg-white text-black font-black py-3 rounded-xl uppercase">Try Again</button>
-                <button id="btn-solo-fallback" class="bg-indigo-600 text-white font-black py-3 rounded-xl uppercase">Solo Mode Instead</button>
             </div>
         </div>
 
@@ -219,7 +202,12 @@
         ];
 
         const HATS = [
-            { id: 'none', name: 'No Hat' }, { id: 'tophat', name: 'Top Hat' }, { id: 'viking', name: 'Viking' }, { id: 'cowboy', name: 'Cowboy' }
+            { id: 'none', name: 'No Hat' }, 
+            { id: 'tophat', name: 'Top Hat' }, 
+            { id: 'viking', name: 'Viking' }, 
+            { id: 'cowboy', name: 'Cowboy' },
+            { id: 'tuxedo', name: 'Tuxedo' },
+            { id: 'propeller', name: 'Propeller' }
         ];
 
         const THEMES = [
@@ -241,6 +229,7 @@
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const homeAvatarCtx = document.getElementById('home-avatar-preview').getContext('2d');
 
         function initAudio() { if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function playSound(f) {
@@ -288,14 +277,8 @@
             document.getElementById('ui-gameover').classList.add('hidden');
             document.getElementById('ui-matchmaking').classList.add('hidden');
             document.getElementById('ui-battle-start').classList.add('hidden');
-            document.getElementById('ui-perm-error').classList.add('hidden');
-            document.getElementById('home-coins').innerText = state.coins || 0;
+            document.getElementById('home-coins').innerText = 0;
             updateStatUI();
-        }
-
-        function showPermissionError() {
-            document.getElementById('ui-matchmaking').classList.add('hidden');
-            document.getElementById('ui-perm-error').classList.remove('hidden');
         }
 
         async function startMatchmaking() {
@@ -318,8 +301,7 @@
                 if (!found) waitForOpponent();
             } catch (e) {
                 console.error(e);
-                if (e.code === 'PERMISSION_DENIED') showPermissionError();
-                else document.getElementById('ui-matchmaking').classList.add('hidden');
+                document.getElementById('ui-matchmaking').classList.add('hidden');
             }
         }
 
@@ -329,10 +311,14 @@
             db.ref('rooms/' + rCode).set({
                 p1: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0 },
                 status: 'waiting', theme: state.selectedThemeId
-            }).catch(e => showPermissionError());
+            });
             
-            db.ref('rooms/' + rCode + '/status').on('value', snap => {
-                if (snap.val() === 'playing') startBattle(rCode, 'p1');
+            db.ref('rooms/' + rCode).on('value', snap => {
+                const data = snap.val();
+                if (data && data.status === 'playing' && data.p1 && data.p2) {
+                    db.ref('rooms/' + rCode).off('value'); 
+                    startBattle(rCode, 'p1');
+                }
             });
         }
 
@@ -345,7 +331,7 @@
                     status: 'playing'
                 });
                 startBattle(rCode, 'p2');
-            } catch(e) { showPermissionError(); }
+            } catch(e) { console.error(e); }
         }
 
         function generateBattleClocks() {
@@ -364,6 +350,7 @@
             
             db.ref('rooms/' + rCode).once('value', snap => {
                 const data = snap.val();
+                if (!data) return backToHome();
                 const oppId = role === 'p1' ? 'p2' : 'p1';
                 state.clocks = data.clocks;
                 state.opponent.skin = data[oppId].skin || 'classic';
@@ -410,6 +397,7 @@
             } else {
                 state.clocks.forEach(c => c.angle = -Math.PI/2);
                 document.getElementById('opponent-hud').classList.remove('hidden');
+                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ skin: state.selectedSkinId, hat: state.selectedHatId });
             }
             document.getElementById('ui-home').classList.add('hidden');
             document.getElementById('ui-hud').classList.remove('hidden');
@@ -450,7 +438,6 @@
                 }
             }
             
-            // Immediate death check: Horizontal edges or bottom edge
             if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) {
                 gameOver();
                 return;
@@ -467,18 +454,16 @@
         }
 
         function gameOver() {
-            if (state.status !== 'PLAYING') return; // Prevent double trigger
-            
+            if (state.status !== 'PLAYING') return;
             if (state.isMultiplayer) {
                 db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' }).catch(()=>{});
                 checkWinner();
             } else {
                 state.status = 'GAMEOVER';
-                addLoss(); // Solo death counts as a loss
+                addLoss();
                 document.getElementById('final-score').innerText = state.score;
                 document.getElementById('battle-result').innerText = "GAME OVER";
                 document.getElementById('ui-gameover').classList.remove('hidden');
-                // Auto return to menu - wait slightly so player sees where they died
                 setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 1500);
             }
         }
@@ -490,14 +475,10 @@
                 if (p1.status === 'dead' && p2.status === 'dead') {
                     state.status = 'GAMEOVER';
                     const win = (state.playerId === 'p1' ? p1.score > p2.score : p2.score > p1.score);
-                    
-                    if (win) addWin();
-                    else addLoss();
-
+                    if (win) addWin(); else addLoss();
                     document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
                     document.getElementById('final-score').innerText = state.score;
                     document.getElementById('ui-gameover').classList.remove('hidden');
-                    // Auto return to menu
                     setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 2500);
                 }
             });
@@ -506,17 +487,45 @@
         function drawPigAvatar(pctx, skin, x, y, scale = 1, rotation = 0, hatId = 'none') {
             if (!skin) skin = SKINS[0];
             pctx.save(); pctx.translate(x, y); pctx.scale(scale, scale); pctx.rotate(rotation);
+            
+            // Pig body
             pctx.fillStyle = skin.body; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, 0, Math.PI*2); pctx.fill();
+            
+            // Tuxedo logic
+            if (hatId === 'tuxedo') {
+                pctx.fillStyle = '#000';
+                pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, Math.PI * 0.2, Math.PI * 1.8); pctx.lineTo(0, 0); pctx.fill();
+                pctx.fillStyle = '#fff'; pctx.beginPath(); pctx.moveTo(0, -6); pctx.lineTo(-6, 8); pctx.lineTo(6, 8); pctx.closePath(); pctx.fill();
+                pctx.fillStyle = '#000'; pctx.beginPath(); pctx.moveTo(-3, 0); pctx.lineTo(3, 4); pctx.lineTo(3, -4); pctx.closePath(); pctx.moveTo(3, 0); pctx.lineTo(-3, 4); pctx.lineTo(-3, -4); pctx.closePath(); pctx.fill();
+            }
+
             pctx.fillStyle = skin.ears; pctx.beginPath(); pctx.moveTo(-14, -10); pctx.lineTo(-18, -20); pctx.lineTo(-6, -14); pctx.fill();
             pctx.beginPath(); pctx.moveTo(14, -10); pctx.lineTo(18, -20); pctx.lineTo(6, -14); pctx.fill();
             pctx.fillStyle = skin.snout; pctx.beginPath(); pctx.ellipse(0, 4, 8, 6, 0, 0, Math.PI*2); pctx.fill();
             pctx.fillStyle = 'black'; pctx.beginPath(); pctx.arc(-7, -4, 2.5, 0, Math.PI*2); pctx.fill();
             pctx.beginPath(); pctx.arc(7, -4, 2.5, 0, Math.PI*2); pctx.fill();
-            if (hatId !== 'none') {
+            
+            if (hatId !== 'none' && hatId !== 'tuxedo') {
                 pctx.fillStyle = '#000';
                 if (hatId === 'tophat') pctx.fillRect(-10, -25, 20, 15);
                 if (hatId === 'viking') { pctx.beginPath(); pctx.arc(0, -12, 10, Math.PI, 0); pctx.fill(); }
                 if (hatId === 'cowboy') { pctx.fillStyle = '#78350f'; pctx.beginPath(); pctx.ellipse(0, -12, 15, 4, 0, 0, Math.PI*2); pctx.fill(); pctx.fillRect(-8, -22, 16, 10); }
+                if (hatId === 'propeller') {
+                    // Propeller Hat
+                    pctx.fillStyle = '#ef4444'; // Red cap base
+                    pctx.beginPath(); pctx.arc(0, -14, 8, Math.PI, 0); pctx.fill();
+                    pctx.fillStyle = '#64748b'; // Stem
+                    pctx.fillRect(-1, -22, 2, 8);
+                    
+                    // Spinning blades
+                    const spinAngle = (Date.now() / 100) % (Math.PI * 2);
+                    pctx.save();
+                    pctx.translate(0, -22);
+                    pctx.rotate(spinAngle);
+                    pctx.fillStyle = '#fbbf24'; // Yellow blades
+                    pctx.fillRect(-12, -1, 24, 2);
+                    pctx.restore();
+                }
             }
             pctx.restore();
         }
@@ -524,6 +533,14 @@
         function draw() {
             const theme = THEMES.find(t => t.id === state.selectedThemeId) || THEMES[0];
             ctx.fillStyle = theme.bg; ctx.fillRect(0,0,WIDTH,HEIGHT);
+            
+            if (state.status === 'HOME') {
+                // Home screen specific drawing if any, or just background
+                homeAvatarCtx.clearRect(0,0,120,120);
+                const skin = SKINS.find(s=>s.id===state.selectedSkinId);
+                drawPigAvatar(homeAvatarCtx, skin, 60, 70, 2.5, Math.sin(Date.now()/500)*0.1, state.selectedHatId);
+            }
+
             ctx.save(); ctx.translate(0, -state.cameraY);
             state.clocks.forEach(c => {
                 ctx.beginPath(); ctx.arc(c.x, c.y, c.radius, 0, Math.PI*2); ctx.strokeStyle = c.color; ctx.lineWidth = 6; ctx.stroke();
@@ -546,19 +563,10 @@
 
         document.getElementById('btn-battle').onclick = startMatchmaking;
         document.getElementById('btn-solo').onclick = () => { state.isMultiplayer = false; startGame(); };
-        document.getElementById('btn-solo-fallback').onclick = () => { 
-            backToHome();
-            state.isMultiplayer = false; startGame(); 
-        };
+        document.getElementById('btn-solo-fallback').onclick = () => { backToHome(); state.isMultiplayer = false; startGame(); };
         document.getElementById('btn-go-home').onclick = () => backToHome();
         document.getElementById('btn-cancel-match').onclick = () => backToHome();
-        
-        // Username handling
-        document.getElementById('div-username').onclick = () => {
-            document.getElementById('username-input').value = state.username;
-            document.getElementById('ui-username').classList.remove('hidden');
-        };
-
+        document.getElementById('div-username').onclick = () => { document.getElementById('username-input').value = state.username; document.getElementById('ui-username').classList.remove('hidden'); };
         document.getElementById('btn-save-username').onclick = () => {
             const v = document.getElementById('username-input').value.trim();
             if (v.length < 2) return;
@@ -566,8 +574,15 @@
             document.getElementById('ui-username').classList.add('hidden');
             document.getElementById('display-username').innerText = v;
         };
+
+        // Home avatar click = cycle skins shortcut
+        document.getElementById('home-avatar-container').onclick = () => {
+            const idx = SKINS.findIndex(s => s.id === state.selectedSkinId);
+            const nextIdx = (idx + 1) % SKINS.length;
+            selSkin(SKINS[nextIdx].id);
+            playSound(880);
+        };
         
-        // Popup Handlers
         document.getElementById('btn-skins').onclick = () => {
             const grid = document.getElementById('skins-grid');
             grid.innerHTML = SKINS.map(s => `<div onclick="window.selSkin('${s.id}')" class="card-item border-2 ${state.selectedSkinId===s.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="prev-${s.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${s.name}</span></div>`).join('');
@@ -580,7 +595,14 @@
         document.getElementById('btn-hats').onclick = () => {
             const grid = document.getElementById('hats-grid');
             grid.innerHTML = HATS.map(h => `<div onclick="window.selHat('${h.id}')" class="card-item border-2 ${state.selectedHatId===h.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="hprev-${h.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${h.name}</span></div>`).join('');
-            HATS.forEach(h => drawPigAvatar(document.getElementById(`hprev-${h.id}`).getContext('2d'), SKINS[0], 32, 32, 1, 0, h.id));
+            HATS.forEach(h => {
+                const hctx = document.getElementById(`hprev-${h.id}`).getContext('2d');
+                // Previews for hats don't need continuous loop here as draw() loop handles static previews if drawn once, 
+                // but since propeller spins we draw it once and the global loop isn't touching these.
+                // We'll actually draw them once but drawPigAvatar uses Date.now() so they'll only spin if redrawn.
+                // For simplicity, previews in the grid won't spin unless we add a specific grid-loop.
+                drawPigAvatar(hctx, SKINS[0], 32, 32, 1, 0, h.id);
+            });
             document.getElementById('ui-hats').classList.remove('hidden');
         };
         window.selHat = (id) => { state.selectedHatId = id; localStorage.setItem('oinkHatSelected', id); document.getElementById('ui-hats').classList.add('hidden'); };
@@ -597,10 +619,8 @@
         canvas.addEventListener('mousedown', () => { initAudio(); jump(); });
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); jump(); });
         
-        // Initial Stat Load
         updateStatUI();
         requestAnimationFrame(loop);
-        document.getElementById('home-coins').innerText = state.coins || 0;
         document.getElementById('display-username').innerText = state.username || 'Identify Yourself';
     </script>
 </body>
