@@ -28,12 +28,8 @@
         .ui-layer button, .ui-layer .clickable { pointer-events: auto; }
         .card-item { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
         .card-item:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.05); }
-        .toast { animation: slide-in-top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes slide-in-top { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .searching-dots::after { content: '...'; animation: dots 1.5s steps(4, end) infinite; }
         @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80% { content: '...'; } }
-        
-        /* Pulse for customization hint */
         .customize-hint { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
     </style>
@@ -42,8 +38,6 @@
     <div id="game-container" class="relative shadow-2xl overflow-hidden border-4 border-indigo-900 rounded-3xl bg-indigo-950" style="width: 400px; height: 700px;">
         <canvas id="gameCanvas" width="400" height="700"></canvas>
         
-        <div id="toast-container" class="absolute top-4 left-0 right-0 z-[100] px-4 flex flex-col items-center gap-2 pointer-events-none"></div>
-
         <!-- Home Screen -->
         <div id="ui-home" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/80 backdrop-blur-sm z-40 text-white p-6 text-center">
             <div class="absolute top-6 left-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
@@ -57,17 +51,12 @@
                 </div>
             </div>
 
-            <div class="absolute top-6 right-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
-                <div class="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[10px] text-black font-black">₵</div>
-                <div id="home-coins" class="text-sm font-black">0</div>
-            </div>
-
             <div class="mb-2">
                 <h1 class="text-5xl font-black mb-1 tracking-tighter text-pink-400 drop-shadow-lg leading-none">OINK BATTLE</h1>
                 <p class="text-pink-300/60 font-bold tracking-widest text-[10px] uppercase">Online Swine Showdown</p>
             </div>
 
-            <!-- Avatar Preview (Clickable for customization) -->
+            <!-- Avatar Preview -->
             <div id="home-avatar-container" class="relative group cursor-pointer mb-6 active:scale-90 transition-transform">
                 <div class="absolute -inset-4 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-colors"></div>
                 <canvas id="home-avatar-preview" width="120" height="120" class="relative"></canvas>
@@ -77,7 +66,7 @@
             <div class="flex flex-col gap-3 w-64 items-center">
                 <button id="btn-battle" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl text-xl transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none">
                     <span>BATTLE ONLINE</span>
-                    <span id="conn-status" class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Real-time Versus Mode</span>
+                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">Real-time Versus Mode</span>
                 </button>
                 <button id="btn-solo" class="w-full bg-pink-500 hover:bg-pink-400 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl uppercase border-b-4 border-pink-700">Solo Practice</button>
                 
@@ -100,7 +89,7 @@
                 <div class="absolute inset-0 flex items-center justify-center text-4xl">🐷</div>
             </div>
             <h2 class="text-2xl font-black mb-2 uppercase italic searching-dots">Finding Opponent</h2>
-            <p id="matchmaking-msg" class="text-xs text-white/40 mb-8 max-w-xs">Scanning for rivals...</p>
+            <p class="text-xs text-white/40 mb-8 max-w-xs">Scanning for rivals...</p>
             <button id="btn-cancel-match" class="text-[10px] font-bold text-white/30 hover:text-white uppercase tracking-widest border border-white/10 px-6 py-2 rounded-full">Cancel</button>
         </div>
 
@@ -108,14 +97,14 @@
         <div id="ui-battle-start" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950 z-[70] text-white hidden">
             <div class="flex items-center gap-8 mb-8">
                 <div class="flex flex-col items-center">
-                    <div class="w-20 h-20 bg-pink-500/20 rounded-2xl border-2 border-pink-500 mb-2 flex items-center justify-center overflow-hidden">
+                    <div class="w-20 h-20 bg-pink-500/20 rounded-2xl border-2 border-pink-500 mb-2 flex items-center justify-center">
                         <canvas id="p1-preview" width="64" height="64"></canvas>
                     </div>
                     <span id="p1-name" class="font-black text-sm uppercase">YOU</span>
                 </div>
                 <div class="text-4xl font-black italic text-pink-500">VS</div>
                 <div class="flex flex-col items-center">
-                    <div class="w-20 h-20 bg-indigo-500/20 rounded-2xl border-2 border-indigo-500 mb-2 flex items-center justify-center overflow-hidden">
+                    <div class="w-20 h-20 bg-indigo-500/20 rounded-2xl border-2 border-indigo-500 mb-2 flex items-center justify-center">
                         <canvas id="p2-preview" width="64" height="64"></canvas>
                     </div>
                     <span id="p2-name" class="font-black text-sm uppercase">RIVAL</span>
@@ -126,26 +115,15 @@
 
         <!-- Popups -->
         <div id="ui-skins" class="absolute inset-0 flex flex-col bg-indigo-950 z-50 text-white p-6 hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-black uppercase italic tracking-tighter">Skins</h2>
-                <button id="btn-close-skins" class="bg-white/10 p-2 rounded-full">✕</button>
-            </div>
+            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-black uppercase italic italic tracking-tighter">Skins</h2><button id="btn-close-skins" class="bg-white/10 p-2 rounded-full">✕</button></div>
             <div id="skins-grid" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
         </div>
-
         <div id="ui-hats" class="absolute inset-0 flex flex-col bg-indigo-950 z-50 text-white p-6 hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-black uppercase italic tracking-tighter">Hats</h2>
-                <button id="btn-close-hats" class="bg-white/10 p-2 rounded-full">✕</button>
-            </div>
+            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-black uppercase italic italic tracking-tighter">Hats</h2><button id="btn-close-hats" class="bg-white/10 p-2 rounded-full">✕</button></div>
             <div id="hats-grid" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
         </div>
-
         <div id="ui-themes" class="absolute inset-0 flex flex-col bg-indigo-950 z-50 text-white p-6 hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-black uppercase italic tracking-tighter">Themes</h2>
-                <button id="btn-close-themes" class="bg-white/10 p-2 rounded-full">✕</button>
-            </div>
+            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-black uppercase italic italic tracking-tighter">Themes</h2><button id="btn-close-themes" class="bg-white/10 p-2 rounded-full">✕</button></div>
             <div id="themes-grid" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
         </div>
 
@@ -165,7 +143,7 @@
         <div id="ui-gameover" class="absolute inset-0 flex flex-col items-center justify-center bg-red-950/90 backdrop-blur-md z-[55] text-white p-6 text-center hidden">
             <h2 id="battle-result" class="text-5xl font-black mb-1 uppercase tracking-tighter">YOU LOST!</h2>
             <div class="text-7xl font-black text-pink-400 mb-2" id="final-score">0</div>
-            <p id="return-hint" class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-8">Returning to menu...</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-8">Returning to menu...</p>
             <button id="btn-go-home" class="bg-white text-indigo-900 font-black py-4 px-12 rounded-xl text-2xl w-64 active:scale-95 transition-transform uppercase">HOME</button>
         </div>
 
@@ -178,7 +156,6 @@
     </div>
 
     <script>
-        // Game Script
         const firebaseConfig = {
             apiKey: "AIzaSyBoNeemu9G-sBKPemDxelpCPOuiTZHLyhg",
             authDomain: "gahoot-41e25.firebaseapp.com",
@@ -193,23 +170,15 @@
 
         const WIDTH = 400; const HEIGHT = 700; const CLOCK_SPACING = 260; const JUMP_SPEED = 14;
         const CLOCK_COLORS = ['#F472B6', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#FB923C'];
-
         const SKINS = [
             { id: 'classic', name: 'Classic Oink', body: '#F472B6', ears: '#EC4899', snout: '#F9A8D4' },
             { id: 'neon', name: 'Neon Hog', body: '#000000', ears: '#3B82F6', snout: '#60A5FA' },
             { id: 'gold', name: 'Gold Swine', body: '#FBBF24', ears: '#D97706', snout: '#FDE68A' },
             { id: 'ghost', name: 'Spectral Pig', body: 'rgba(255,255,255,0.4)', ears: 'rgba(200,200,255,0.3)', snout: 'rgba(255,255,255,0.5)' }
         ];
-
         const HATS = [
-            { id: 'none', name: 'No Hat' }, 
-            { id: 'tophat', name: 'Top Hat' }, 
-            { id: 'viking', name: 'Viking' }, 
-            { id: 'cowboy', name: 'Cowboy' },
-            { id: 'tuxedo', name: 'Tuxedo' },
-            { id: 'propeller', name: 'Propeller' }
+            { id: 'none', name: 'No Hat' }, { id: 'tophat', name: 'Top Hat' }, { id: 'viking', name: 'Viking' }, { id: 'cowboy', name: 'Cowboy' }, { id: 'tuxedo', name: 'Tuxedo' }, { id: 'propeller', name: 'Propeller' }
         ];
-
         const THEMES = [
             { id: 'classic', name: 'Neon Night', bg: '#0f172a' }, { id: 'noir', name: 'Old Cinema', bg: '#000000' }, { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' }
         ];
@@ -222,14 +191,15 @@
             username: localStorage.getItem('oinkUser') || '',
             wins: parseInt(localStorage.getItem('oinkWins')) || 0,
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
-            pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2 },
+            pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false },
             opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none' },
-            clocks: [], cameraY: 0, lastTime: 0
+            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false
         };
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const homeAvatarCtx = document.getElementById('home-avatar-preview').getContext('2d');
+        const homeAvatarPreview = document.getElementById('home-avatar-preview');
+        const homeAvatarCtx = homeAvatarPreview ? homeAvatarPreview.getContext('2d') : null;
 
         function initAudio() { if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function playSound(f) {
@@ -244,18 +214,24 @@
         function updateStatUI() {
             const total = state.wins + state.losses;
             const rate = total > 0 ? ((state.wins / total) * 100).toFixed(1) : "0.0";
-            document.getElementById('stat-wins').innerText = state.wins;
-            document.getElementById('stat-losses').innerText = state.losses;
-            document.getElementById('stat-rate').innerText = rate;
+            const els = { wins: 'stat-wins', losses: 'stat-losses', rate: 'stat-rate' };
+            for(let key in els) {
+                const el = document.getElementById(els[key]);
+                if(el) el.innerText = key === 'rate' ? rate : state[key];
+            }
         }
 
         function addWin() {
+            if (state.matchProcessed) return;
+            state.matchProcessed = true;
             state.wins++;
             localStorage.setItem('oinkWins', state.wins);
             updateStatUI();
         }
 
         function addLoss() {
+            if (state.matchProcessed) return;
+            state.matchProcessed = true;
             state.losses++;
             localStorage.setItem('oinkLosses', state.losses);
             updateStatUI();
@@ -267,17 +243,11 @@
             state.clocks = [];
             state.score = 0;
             state.cameraY = 0;
-            if (state.roomId) {
-                db.ref('rooms/' + state.roomId).off();
-                state.roomId = null;
-            }
-            // Reset UI layers
+            state.matchProcessed = false;
+            state.pig.isDead = false;
+            if (state.roomId) { db.ref('rooms/' + state.roomId).off(); state.roomId = null; }
             document.getElementById('ui-home').classList.remove('hidden');
-            document.getElementById('ui-hud').classList.add('hidden');
-            document.getElementById('ui-gameover').classList.add('hidden');
-            document.getElementById('ui-matchmaking').classList.add('hidden');
-            document.getElementById('ui-battle-start').classList.add('hidden');
-            document.getElementById('home-coins').innerText = 0;
+            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start'].forEach(id => document.getElementById(id).classList.add('hidden'));
             updateStatUI();
         }
 
@@ -285,34 +255,24 @@
             if (!state.username) return document.getElementById('ui-username').classList.remove('hidden');
             state.status = 'MATCHMAKING';
             document.getElementById('ui-matchmaking').classList.remove('hidden');
-            
-            const queueRef = db.ref('matchmaking_queue');
             try {
-                await queueRef.update({ [state.username]: Date.now() });
+                await db.ref('matchmaking_queue').update({ [state.username]: Date.now() });
                 const roomsSnap = await db.ref('rooms').once('value');
                 let found = false;
                 roomsSnap.forEach(snap => {
-                    if (snap.val().status === 'waiting') {
-                        joinRoom(snap.key);
-                        found = true;
-                        return true;
-                    }
+                    if (snap.val().status === 'waiting') { joinRoom(snap.key); found = true; return true; }
                 });
                 if (!found) waitForOpponent();
-            } catch (e) {
-                console.error(e);
-                document.getElementById('ui-matchmaking').classList.add('hidden');
-            }
+            } catch (e) { console.error(e); document.getElementById('ui-matchmaking').classList.add('hidden'); }
         }
 
         function waitForOpponent() {
             const rCode = "room_" + state.username + "_" + Date.now().toString().slice(-4);
             state.roomId = rCode; state.playerId = 'p1';
             db.ref('rooms/' + rCode).set({
-                p1: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0 },
+                p1: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0, status: 'playing' },
                 status: 'waiting', theme: state.selectedThemeId
             });
-            
             db.ref('rooms/' + rCode).on('value', snap => {
                 const data = snap.val();
                 if (data && data.status === 'playing' && data.p1 && data.p2) {
@@ -326,7 +286,7 @@
             state.roomId = rCode; state.playerId = 'p2';
             try {
                 await db.ref('rooms/' + rCode).update({
-                    p2: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0 },
+                    p2: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0, status: 'playing' },
                     clocks: generateBattleClocks(),
                     status: 'playing'
                 });
@@ -344,52 +304,41 @@
         }
 
         function startBattle(rCode, role) {
-            state.status = 'BATTLE_START'; state.isMultiplayer = true;
+            state.status = 'BATTLE_START'; state.isMultiplayer = true; state.matchProcessed = false;
             document.getElementById('ui-matchmaking').classList.add('hidden');
             document.getElementById('ui-battle-start').classList.remove('hidden');
-            
             db.ref('rooms/' + rCode).once('value', snap => {
-                const data = snap.val();
-                if (!data) return backToHome();
+                const data = snap.val(); if (!data) return backToHome();
                 const oppId = role === 'p1' ? 'p2' : 'p1';
                 state.clocks = data.clocks;
                 state.opponent.skin = data[oppId].skin || 'classic';
                 state.opponent.hat = data[oppId].hat || 'none';
-                
                 document.getElementById('p1-name').innerText = data[role].name;
                 document.getElementById('p2-name').innerText = data[oppId].name;
                 drawPigAvatar(document.getElementById('p1-preview').getContext('2d'), SKINS.find(s=>s.id===data[role].skin), 32, 32, 1, 0, data[role].hat);
                 drawPigAvatar(document.getElementById('p2-preview').getContext('2d'), SKINS.find(s=>s.id===data[oppId].skin), 32, 32, 1, 0, data[oppId].hat);
             });
-
             let count = 3;
             const cd = setInterval(() => {
                 count--;
                 document.getElementById('battle-countdown').innerText = count > 0 ? count : "OINK!";
-                if (count <= -1) {
-                    clearInterval(cd);
-                    document.getElementById('ui-battle-start').classList.add('hidden');
-                    startGame();
-                }
+                if (count <= -1) { clearInterval(cd); document.getElementById('ui-battle-start').classList.add('hidden'); startGame(); }
             }, 1000);
-
             const oppId = role === 'p1' ? 'p2' : 'p1';
             db.ref('rooms/' + rCode + '/' + oppId).on('value', snap => {
                 const d = snap.val();
                 if (d) {
                     state.opponent.x = d.x; state.opponent.y = d.y; state.opponent.score = d.score;
-                    state.opponent.status = d.status || 'playing';
-                    state.opponent.skin = d.skin || state.opponent.skin;
-                    state.opponent.hat = d.hat || state.opponent.hat;
+                    state.opponent.status = d.status; state.opponent.skin = d.skin; state.opponent.hat = d.hat;
                     document.getElementById('opponent-score-val').innerText = d.score;
-                    if (d.status === 'dead' && state.status === 'PLAYING') checkWinner();
+                    if (d.status === 'dead' && !state.matchProcessed) checkWinner();
                 }
             });
         }
 
         function startGame() {
-            initAudio(); state.status = 'PLAYING'; state.score = 0; state.cameraY = 0;
-            state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2 };
+            initAudio(); state.status = 'PLAYING'; state.score = 0; state.cameraY = 0; state.matchProcessed = false;
+            state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
             if (!state.isMultiplayer) {
                 state.clocks = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, angle: -Math.PI/2, speed: 0.04, color: CLOCK_COLORS[0] }];
                 for(let i=1; i<10; i++) state.clocks.push(createSoloClock(i, HEIGHT-150-i*CLOCK_SPACING, i));
@@ -397,7 +346,7 @@
             } else {
                 state.clocks.forEach(c => c.angle = -Math.PI/2);
                 document.getElementById('opponent-hud').classList.remove('hidden');
-                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ skin: state.selectedSkinId, hat: state.selectedHatId });
+                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ skin: state.selectedSkinId, hat: state.selectedHatId, status: 'playing' });
             }
             document.getElementById('ui-home').classList.add('hidden');
             document.getElementById('ui-hud').classList.remove('hidden');
@@ -409,7 +358,7 @@
         }
 
         function jump() {
-            if (state.status !== 'PLAYING' || state.pig.attachedTo === null) return;
+            if (state.status !== 'PLAYING' || state.pig.isDead || state.pig.attachedTo === null) return;
             const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
             state.pig.vx = Math.cos(c.angle) * JUMP_SPEED;
             state.pig.vy = Math.sin(c.angle) * JUMP_SPEED;
@@ -420,43 +369,37 @@
         function update(timeScale) {
             if (state.status !== 'PLAYING') return;
             state.clocks.forEach(c => c.angle += c.speed * timeScale);
-            
-            if (state.pig.attachedTo !== null) {
-                const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
-                state.pig.x = c.x + Math.cos(c.angle) * c.radius;
-                state.pig.y = c.y + Math.sin(c.angle) * c.radius;
-            } else {
-                state.pig.x += state.pig.vx * timeScale;
-                state.pig.y += state.pig.vy * timeScale;
-                for (const c of state.clocks) {
-                    const d = Math.sqrt((state.pig.x-c.x)**2 + (state.pig.y-c.y)**2);
-                    if (d < c.radius + 10) {
-                        state.pig.attachedTo = c.id;
-                        if (c.id > state.score) { state.score = c.id; document.getElementById('score-val').innerText = state.score; }
-                        playSound(220); break;
+            if (!state.pig.isDead) {
+                if (state.pig.attachedTo !== null) {
+                    const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
+                    state.pig.x = c.x + Math.cos(c.angle) * c.radius;
+                    state.pig.y = c.y + Math.sin(c.angle) * c.radius;
+                } else {
+                    state.pig.x += state.pig.vx * timeScale;
+                    state.pig.y += state.pig.vy * timeScale;
+                    for (const c of state.clocks) {
+                        if (Math.sqrt((state.pig.x-c.x)**2 + (state.pig.y-c.y)**2) < c.radius + 10) {
+                            state.pig.attachedTo = c.id;
+                            if (c.id > state.score) { state.score = c.id; document.getElementById('score-val').innerText = state.score; }
+                            playSound(220); break;
+                        }
                     }
                 }
-            }
-            
-            if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) {
-                gameOver();
-                return;
-            }
-            
-            state.cameraY += (state.pig.y - HEIGHT/2 - state.cameraY) * 0.1 * timeScale;
-            
-            if (state.isMultiplayer) {
-                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score }).catch(()=>{});
-            } else {
-                const last = state.clocks[state.clocks.length-1];
-                if (last && last.y > state.cameraY - 400) state.clocks.push(createSoloClock(last.id+1, last.y-CLOCK_SPACING, last.id+1));
+                if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) { gameOver(); }
+                state.cameraY += (state.pig.y - HEIGHT/2 - state.cameraY) * 0.1 * timeScale;
+                if (state.isMultiplayer) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score });
+                else {
+                    const last = state.clocks[state.clocks.length-1];
+                    if (last && last.y > state.cameraY - 400) state.clocks.push(createSoloClock(last.id+1, last.y-CLOCK_SPACING, last.id+1));
+                }
             }
         }
 
         function gameOver() {
-            if (state.status !== 'PLAYING') return;
+            if (state.pig.isDead) return;
+            state.pig.isDead = true;
             if (state.isMultiplayer) {
-                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' }).catch(()=>{});
+                db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
                 checkWinner();
             } else {
                 state.status = 'GAMEOVER';
@@ -469,12 +412,12 @@
         }
 
         function checkWinner() {
+            if (state.matchProcessed || !state.isMultiplayer) return;
             db.ref('rooms/' + state.roomId).once('value', snap => {
-                const d = snap.val(); if (!d) return;
-                const p1 = d.p1, p2 = d.p2;
-                if (p1.status === 'dead' && p2.status === 'dead') {
+                const d = snap.val(); if (!d || !d.p1 || !d.p2) return;
+                if (d.p1.status === 'dead' && d.p2.status === 'dead') {
                     state.status = 'GAMEOVER';
-                    const win = (state.playerId === 'p1' ? p1.score > p2.score : p2.score > p1.score);
+                    const win = (state.playerId === 'p1' ? d.p1.score > d.p2.score : d.p2.score > d.p1.score);
                     if (win) addWin(); else addLoss();
                     document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
                     document.getElementById('final-score').innerText = state.score;
@@ -485,46 +428,28 @@
         }
 
         function drawPigAvatar(pctx, skin, x, y, scale = 1, rotation = 0, hatId = 'none') {
-            if (!skin) skin = SKINS[0];
+            if (!skin || !pctx) return;
             pctx.save(); pctx.translate(x, y); pctx.scale(scale, scale); pctx.rotate(rotation);
-            
-            // Pig body
             pctx.fillStyle = skin.body; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, 0, Math.PI*2); pctx.fill();
-            
-            // Tuxedo logic
             if (hatId === 'tuxedo') {
-                pctx.fillStyle = '#000';
-                pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, Math.PI * 0.2, Math.PI * 1.8); pctx.lineTo(0, 0); pctx.fill();
+                pctx.fillStyle = '#000'; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, Math.PI * 0.2, Math.PI * 1.8); pctx.lineTo(0, 0); pctx.fill();
                 pctx.fillStyle = '#fff'; pctx.beginPath(); pctx.moveTo(0, -6); pctx.lineTo(-6, 8); pctx.lineTo(6, 8); pctx.closePath(); pctx.fill();
                 pctx.fillStyle = '#000'; pctx.beginPath(); pctx.moveTo(-3, 0); pctx.lineTo(3, 4); pctx.lineTo(3, -4); pctx.closePath(); pctx.moveTo(3, 0); pctx.lineTo(-3, 4); pctx.lineTo(-3, -4); pctx.closePath(); pctx.fill();
             }
-
             pctx.fillStyle = skin.ears; pctx.beginPath(); pctx.moveTo(-14, -10); pctx.lineTo(-18, -20); pctx.lineTo(-6, -14); pctx.fill();
             pctx.beginPath(); pctx.moveTo(14, -10); pctx.lineTo(18, -20); pctx.lineTo(6, -14); pctx.fill();
             pctx.fillStyle = skin.snout; pctx.beginPath(); pctx.ellipse(0, 4, 8, 6, 0, 0, Math.PI*2); pctx.fill();
-            pctx.fillStyle = 'black'; pctx.beginPath(); pctx.arc(-7, -4, 2.5, 0, Math.PI*2); pctx.fill();
-            pctx.beginPath(); pctx.arc(7, -4, 2.5, 0, Math.PI*2); pctx.fill();
-            
+            pctx.fillStyle = 'black'; pctx.beginPath(); pctx.arc(-7, -4, 2.5, 0, Math.PI*2); pctx.fill(); pctx.beginPath(); pctx.arc(7, -4, 2.5, 0, Math.PI*2); pctx.fill();
             if (hatId !== 'none' && hatId !== 'tuxedo') {
                 pctx.fillStyle = '#000';
                 if (hatId === 'tophat') pctx.fillRect(-10, -25, 20, 15);
                 if (hatId === 'viking') { pctx.beginPath(); pctx.arc(0, -12, 10, Math.PI, 0); pctx.fill(); }
                 if (hatId === 'cowboy') { pctx.fillStyle = '#78350f'; pctx.beginPath(); pctx.ellipse(0, -12, 15, 4, 0, 0, Math.PI*2); pctx.fill(); pctx.fillRect(-8, -22, 16, 10); }
                 if (hatId === 'propeller') {
-                    // Propeller Hat
-                    pctx.fillStyle = '#ef4444'; // Red cap base
-                    pctx.beginPath(); pctx.arc(0, -14, 8, Math.PI, 0); pctx.fill();
-                    pctx.fillStyle = '#64748b'; // Stem
-                    pctx.fillRect(-1, -22, 2, 8);
-                    
-                    // Spinning blades
-                    const spinAngle = (Date.now() / 100) % (Math.PI * 2);
-                    pctx.save();
-                    pctx.translate(0, -22);
-                    pctx.rotate(spinAngle);
-                    pctx.fillStyle = '#fbbf24'; // Yellow blades
-                    pctx.fillRect(-12, -1, 24, 2);
-                    pctx.restore();
+                    pctx.fillStyle = '#ef4444'; pctx.beginPath(); pctx.arc(0, -14, 8, Math.PI, 0); pctx.fill();
+                    pctx.fillStyle = '#64748b'; pctx.fillRect(-1, -22, 2, 8);
+                    const spin = (Date.now() / 100) % (Math.PI * 2);
+                    pctx.save(); pctx.translate(0, -22); pctx.rotate(spin); pctx.fillStyle = '#fbbf24'; pctx.fillRect(-12, -1, 24, 2); pctx.restore();
                 }
             }
             pctx.restore();
@@ -533,93 +458,65 @@
         function draw() {
             const theme = THEMES.find(t => t.id === state.selectedThemeId) || THEMES[0];
             ctx.fillStyle = theme.bg; ctx.fillRect(0,0,WIDTH,HEIGHT);
-            
-            if (state.status === 'HOME') {
-                // Home screen specific drawing if any, or just background
+            if (state.status === 'HOME' && homeAvatarCtx) {
                 homeAvatarCtx.clearRect(0,0,120,120);
-                const skin = SKINS.find(s=>s.id===state.selectedSkinId);
-                drawPigAvatar(homeAvatarCtx, skin, 60, 70, 2.5, Math.sin(Date.now()/500)*0.1, state.selectedHatId);
+                drawPigAvatar(homeAvatarCtx, SKINS.find(s=>s.id===state.selectedSkinId), 60, 70, 2.5, Math.sin(Date.now()/500)*0.1, state.selectedHatId);
             }
-
             ctx.save(); ctx.translate(0, -state.cameraY);
             state.clocks.forEach(c => {
                 ctx.beginPath(); ctx.arc(c.x, c.y, c.radius, 0, Math.PI*2); ctx.strokeStyle = c.color; ctx.lineWidth = 6; ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x + Math.cos(c.angle)*c.radius, c.y + Math.sin(c.angle)*c.radius); ctx.strokeStyle = c.color; ctx.lineWidth = 8; ctx.stroke();
             });
-            const mySkin = SKINS.find(s=>s.id===state.selectedSkinId);
-            drawPigAvatar(ctx, mySkin, state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
+            drawPigAvatar(ctx, SKINS.find(s=>s.id===state.selectedSkinId), state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
             if (state.isMultiplayer) {
-                const oppSkin = SKINS.find(s => s.id === state.opponent.skin) || SKINS[0];
-                ctx.globalAlpha = 0.5; drawPigAvatar(ctx, oppSkin, state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat); ctx.globalAlpha = 1.0;
+                ctx.globalAlpha = 0.5; drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat); ctx.globalAlpha = 1.0;
             }
             ctx.restore();
         }
 
-        function loop(timestamp) {
-            if (!state.lastTime) state.lastTime = timestamp;
-            update((timestamp - state.lastTime) / 16.66);
-            state.lastTime = timestamp; draw(); requestAnimationFrame(loop);
-        }
+        function loop(timestamp) { if (!state.lastTime) state.lastTime = timestamp; update((timestamp - state.lastTime) / 16.66); state.lastTime = timestamp; draw(); requestAnimationFrame(loop); }
 
-        document.getElementById('btn-battle').onclick = startMatchmaking;
-        document.getElementById('btn-solo').onclick = () => { state.isMultiplayer = false; startGame(); };
-        document.getElementById('btn-solo-fallback').onclick = () => { backToHome(); state.isMultiplayer = false; startGame(); };
-        document.getElementById('btn-go-home').onclick = () => backToHome();
-        document.getElementById('btn-cancel-match').onclick = () => backToHome();
-        document.getElementById('div-username').onclick = () => { document.getElementById('username-input').value = state.username; document.getElementById('ui-username').classList.remove('hidden'); };
-        document.getElementById('btn-save-username').onclick = () => {
-            const v = document.getElementById('username-input').value.trim();
-            if (v.length < 2) return;
-            state.username = v; localStorage.setItem('oinkUser', v);
-            document.getElementById('ui-username').classList.add('hidden');
-            document.getElementById('display-username').innerText = v;
-        };
-
-        // Home avatar click = cycle skins shortcut
-        document.getElementById('home-avatar-container').onclick = () => {
-            const idx = SKINS.findIndex(s => s.id === state.selectedSkinId);
-            const nextIdx = (idx + 1) % SKINS.length;
-            selSkin(SKINS[nextIdx].id);
-            playSound(880);
-        };
-        
-        document.getElementById('btn-skins').onclick = () => {
-            const grid = document.getElementById('skins-grid');
-            grid.innerHTML = SKINS.map(s => `<div onclick="window.selSkin('${s.id}')" class="card-item border-2 ${state.selectedSkinId===s.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="prev-${s.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${s.name}</span></div>`).join('');
-            SKINS.forEach(s => drawPigAvatar(document.getElementById(`prev-${s.id}`).getContext('2d'), s, 32, 32, 1, 0, 'none'));
-            document.getElementById('ui-skins').classList.remove('hidden');
-        };
-        window.selSkin = (id) => { state.selectedSkinId = id; localStorage.setItem('oinkSkin', id); document.getElementById('ui-skins').classList.add('hidden'); };
-        document.getElementById('btn-close-skins').onclick = () => document.getElementById('ui-skins').classList.add('hidden');
-
-        document.getElementById('btn-hats').onclick = () => {
-            const grid = document.getElementById('hats-grid');
-            grid.innerHTML = HATS.map(h => `<div onclick="window.selHat('${h.id}')" class="card-item border-2 ${state.selectedHatId===h.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="hprev-${h.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${h.name}</span></div>`).join('');
-            HATS.forEach(h => {
-                const hctx = document.getElementById(`hprev-${h.id}`).getContext('2d');
-                // Previews for hats don't need continuous loop here as draw() loop handles static previews if drawn once, 
-                // but since propeller spins we draw it once and the global loop isn't touching these.
-                // We'll actually draw them once but drawPigAvatar uses Date.now() so they'll only spin if redrawn.
-                // For simplicity, previews in the grid won't spin unless we add a specific grid-loop.
-                drawPigAvatar(hctx, SKINS[0], 32, 32, 1, 0, h.id);
+        function initUI() {
+            const bind = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
+            bind('btn-battle', startMatchmaking);
+            bind('btn-solo', () => { state.isMultiplayer = false; startGame(); });
+            bind('btn-go-home', backToHome);
+            bind('btn-cancel-match', backToHome);
+            bind('div-username', () => { document.getElementById('username-input').value = state.username; document.getElementById('ui-username').classList.remove('hidden'); });
+            bind('btn-save-username', () => {
+                const v = document.getElementById('username-input').value.trim();
+                if (v.length < 2) return; state.username = v; localStorage.setItem('oinkUser', v);
+                document.getElementById('ui-username').classList.add('hidden'); document.getElementById('display-username').innerText = v;
             });
-            document.getElementById('ui-hats').classList.remove('hidden');
-        };
-        window.selHat = (id) => { state.selectedHatId = id; localStorage.setItem('oinkHatSelected', id); document.getElementById('ui-hats').classList.add('hidden'); };
-        document.getElementById('btn-close-hats').onclick = () => document.getElementById('ui-hats').classList.add('hidden');
-
-        document.getElementById('btn-themes').onclick = () => {
-            const grid = document.getElementById('themes-grid');
-            grid.innerHTML = THEMES.map(t => `<div onclick="window.selTheme('${t.id}')" class="card-item border-2 ${state.selectedThemeId===t.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><div class="w-12 h-12 rounded-lg" style="background:${t.bg}"></div><span class="text-sm font-black uppercase">${t.name}</span></div>`).join('');
-            document.getElementById('ui-themes').classList.remove('hidden');
-        };
-        window.selTheme = (id) => { state.selectedThemeId = id; localStorage.setItem('oinkTheme', id); document.getElementById('ui-themes').classList.add('hidden'); };
-        document.getElementById('btn-close-themes').onclick = () => document.getElementById('ui-themes').classList.add('hidden');
+            bind('home-avatar-container', () => {
+                const idx = SKINS.findIndex(s => s.id === state.selectedSkinId);
+                state.selectedSkinId = SKINS[(idx + 1) % SKINS.length].id; localStorage.setItem('oinkSkin', state.selectedSkinId); playSound(880);
+            });
+            bind('btn-skins', () => {
+                const g = document.getElementById('skins-grid'); g.innerHTML = SKINS.map(s => `<div onclick="window.selSkin('${s.id}')" class="card-item border-2 ${state.selectedSkinId===s.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="prev-${s.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${s.name}</span></div>`).join('');
+                SKINS.forEach(s => drawPigAvatar(document.getElementById(`prev-${s.id}`).getContext('2d'), s, 32, 32, 1, 0, 'none'));
+                document.getElementById('ui-skins').classList.remove('hidden');
+            });
+            bind('btn-hats', () => {
+                const g = document.getElementById('hats-grid'); g.innerHTML = HATS.map(h => `<div onclick="window.selHat('${h.id}')" class="card-item border-2 ${state.selectedHatId===h.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="hprev-${h.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${h.name}</span></div>`).join('');
+                HATS.forEach(h => drawPigAvatar(document.getElementById(`hprev-${h.id}`).getContext('2d'), SKINS[0], 32, 32, 1, 0, h.id));
+                document.getElementById('ui-hats').classList.remove('hidden');
+            });
+            bind('btn-themes', () => {
+                const g = document.getElementById('themes-grid'); g.innerHTML = THEMES.map(t => `<div onclick="window.selTheme('${t.id}')" class="card-item border-2 ${state.selectedThemeId===t.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><div class="w-12 h-12 rounded-lg" style="background:${t.bg}"></div><span class="text-sm font-black uppercase">${t.name}</span></div>`).join('');
+                document.getElementById('ui-themes').classList.remove('hidden');
+            });
+            ['skins', 'hats', 'themes'].forEach(k => bind(`btn-close-${k}`, () => document.getElementById(`ui-${k}`).classList.add('hidden')));
+            window.selSkin = id => { state.selectedSkinId = id; localStorage.setItem('oinkSkin', id); document.getElementById('ui-skins').classList.add('hidden'); };
+            window.selHat = id => { state.selectedHatId = id; localStorage.setItem('oinkHatSelected', id); document.getElementById('ui-hats').classList.add('hidden'); };
+            window.selTheme = id => { state.selectedThemeId = id; localStorage.setItem('oinkTheme', id); document.getElementById('ui-themes').classList.add('hidden'); };
+        }
 
         canvas.addEventListener('mousedown', () => { initAudio(); jump(); });
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); jump(); });
         
         updateStatUI();
+        initUI();
         requestAnimationFrame(loop);
         document.getElementById('display-username').innerText = state.username || 'Identify Yourself';
     </script>
