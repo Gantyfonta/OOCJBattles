@@ -72,7 +72,7 @@
                 </button>
                 <button id="btn-timed-battle" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-4 rounded-2xl text-xl transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-pink-800">
                     <span>TIMED BLITZ</span>
-                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">60s Score Race</span>
+                    <span class="text-[9px] opacity-60 mt-1 uppercase tracking-tighter">30s Score Race</span>
                 </button>
                 <button id="btn-solo" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-black py-2.5 rounded-2xl text-sm transition-all active:scale-95 shadow-xl uppercase tracking-widest">Solo Practice</button>
                 
@@ -145,7 +145,7 @@
                 <!-- Timer Display -->
                 <div id="ui-timer" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
                     <div class="bg-pink-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-pink-400/30 timer-glow">
-                        <span id="timer-val" class="text-2xl tabular-nums">60</span><span class="text-[10px] ml-1">S</span>
+                        <span id="timer-val" class="text-2xl tabular-nums">30</span><span class="text-[10px] ml-1">S</span>
                     </div>
                 </div>
 
@@ -218,7 +218,7 @@
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
             pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false },
             opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none' },
-            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 60, matchStartTime: 0
+            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 30, matchStartTime: 0
         };
 
         const canvas = document.getElementById('gameCanvas');
@@ -396,7 +396,7 @@
             state.score = 0; 
             state.cameraY = 0; 
             state.matchProcessed = false;
-            state.timeLeft = 60;
+            state.timeLeft = 30;
             state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
             
             const scoreEl = document.getElementById('score-val');
@@ -441,7 +441,7 @@
             // Update Timer if Timed Mode
             if (state.isTimedMode && state.isMultiplayer) {
                 const now = Date.now();
-                const totalSeconds = 60;
+                const totalSeconds = 30;
                 const elapsed = (now - state.matchStartTime) / 1000;
                 state.timeLeft = Math.max(0, totalSeconds - elapsed);
                 const timerEl = document.getElementById('timer-val');
@@ -678,6 +678,17 @@
 
         canvas.addEventListener('mousedown', (e) => { if(state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
         canvas.addEventListener('touchstart', (e) => { if(state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                if (state.status === 'PLAYING') {
+                    e.preventDefault();
+                    initAudio();
+                    jump();
+                } else if (state.status === 'GAMEOVER') {
+                   // Home binding if we wanted quick restart, but UI buttons handle it well.
+                }
+            }
+        });
         
         updateStatUI();
         initUI();
