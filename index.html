@@ -37,6 +37,7 @@
         .timer-glow { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.5)); }
         .ability-glow { animation: ability-glow 1s ease-in-out infinite alternate; }
         @keyframes ability-glow { from { box-shadow: 0 0 5px #f472b6; } to { box-shadow: 0 0 20px #f472b6; } }
+        .rope-pattern { background: repeating-linear-gradient(45deg, #78350f, #78350f 10px, #92400e 10px, #92400e 20px); }
     </style>
 </head>
 <body>
@@ -166,9 +167,9 @@
                         <div id="tug-bar" class="absolute inset-y-0 left-1/2 bg-orange-500 transition-all duration-300" style="width: 0%;"></div>
                     </div>
                     <div class="flex justify-between text-[8px] font-black uppercase mt-1">
-                        <span>Losing</span>
-                        <span id="tug-timer" class="text-orange-400">10S</span>
-                        <span>Winning</span>
+                        <span id="tug-status-left">Losing</span>
+                        <span id="tug-timer" class="text-orange-400 font-black">10S</span>
+                        <span id="tug-status-right">Winning</span>
                     </div>
                 </div>
 
@@ -400,6 +401,14 @@
             const percentage = Math.max(-50, Math.min(50, state.tugRope * 5));
             bar.style.width = Math.abs(percentage) + '%';
             bar.style.left = (50 + (percentage < 0 ? percentage : 0)) + '%';
+            
+            const leftTxt = document.getElementById('tug-status-left');
+            const rightTxt = document.getElementById('tug-status-right');
+            if(leftTxt && rightTxt) {
+                if(state.tugRope > 0) { leftTxt.className = "text-white opacity-40"; rightTxt.className = "text-green-400 font-black animate-pulse"; }
+                else if (state.tugRope < 0) { leftTxt.className = "text-red-400 font-black animate-pulse"; rightTxt.className = "text-white opacity-40"; }
+                else { leftTxt.className = "text-white opacity-40"; rightTxt.className = "text-white opacity-40"; }
+            }
         }
 
         function startGame() {
@@ -420,8 +429,16 @@
             } else {
                 state.clocks.forEach(c => c.angle = -Math.PI/2);
                 document.getElementById('opponent-hud')?.classList.remove('hidden');
-                const tEl = document.getElementById('ui-timer'); if(tEl) { tEl.style.opacity = (state.isTimedMode || state.isTugMode) ? '1' : '0'; if(state.isTugMode) tEl.classList.add('hidden'); else tEl.classList.remove('hidden'); }
-                const tugEl = document.getElementById('ui-tug'); if(tugEl) { tugEl.style.opacity = state.isTugMode ? '1' : '0'; if(state.isTugMode) tugEl.classList.remove('hidden'); }
+                const tEl = document.getElementById('ui-timer'); 
+                if(tEl) { 
+                    tEl.style.opacity = (state.isTimedMode) ? '1' : '0'; 
+                    if(state.isTimedMode) tEl.classList.remove('hidden'); else tEl.classList.add('hidden');
+                }
+                const tugEl = document.getElementById('ui-tug'); 
+                if(tugEl) { 
+                    tugEl.style.opacity = state.isTugMode ? '1' : '0'; 
+                    if(state.isTugMode) tugEl.classList.remove('hidden'); else tugEl.classList.add('hidden');
+                }
                 safeSetOpacity('ui-surge-alert', state.isSurgeMode ? '1' : '0');
                 db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ skin: state.selectedSkinId, hat: state.selectedHatId, status: 'playing' });
             }
@@ -438,7 +455,7 @@
             if (state.pig.attachedTo !== null) {
                 const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
                 state.pig.lastAttachedId = state.pig.attachedTo;
-                state.pig.jumpCooldown = 15; // Ignore source clock for ~15 frames (normalized by timeScale)
+                state.pig.jumpCooldown = 15;
                 state.pig.vx = Math.cos(c.angle) * JUMP_SPEED; state.pig.vy = Math.sin(c.angle) * JUMP_SPEED;
                 state.pig.attachedTo = null; state.pig.hasDoubleJumped = false; playSound(440);
             }
@@ -532,7 +549,16 @@
                         if (state.pig.jumpCooldown > 0 && c.id === state.pig.lastAttachedId) continue;
                         if (Math.sqrt((state.pig.x-c.x)**2 + (state.pig.y-c.y)**2) < c.radius + 10) { 
                             if(state.selectedSkinId === 'ghost' && state.pig.abilityActive > 0) continue; 
-                            state.pig.attachedTo = c.id; if (c.id > state.score) { state.score = c.id; safeSetText('score-val', state.score); } playSound(220); break; 
+                            state.pig.attachedTo = c.id; 
+                            if (c.id > state.score) { 
+                                state.score = c.id; 
+                                safeSetText('score-val', state.score); 
+                                if (state.isTugMode) {
+                                    state.tugRope = (state.playerId === 'p1') ? (state.score - state.opponent.score) : (state.opponent.score - state.score);
+                                    updateTugUI();
+                                }
+                            } 
+                            playSound(220); break; 
                         } 
                     }
                 }
@@ -545,7 +571,10 @@
         }
 
         function gameOver() {
-            if (state.isTimedMode || state.isTugMode) { state.pig = { ...state.pig, attachedTo: 0, vx: 0, vy: 0, x: 200, y: HEIGHT-150-60, abilityActive: 0, hasDoubleJumped: false, jumpCooldown: 0 }; playSound(110); return; }
+            if (state.isTimedMode || state.isTugMode) { 
+                state.pig = { ...state.pig, attachedTo: 0, vx: 0, vy: 0, x: 200, y: HEIGHT-150-60, abilityActive: 0, hasDoubleJumped: false, jumpCooldown: 0 }; 
+                playSound(110); return; 
+            }
             if (state.pig.isDead) return; state.pig.isDead = true;
             if (state.isMultiplayer) {
                 if(state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
@@ -583,10 +612,18 @@
             if (state.matchProcessed) return; state.status = 'GAMEOVER'; state.pig.isDead = true;
             if (state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
             db.ref('rooms/' + state.roomId).once('value', snap => {
-                const d = snap.val(); if (!d) return; const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
-                const win = state.score > oppScore, draw = state.score === oppScore; if (win) addWin(); else if (!draw) addLoss();
+                const d = snap.val(); if (!d) return; 
+                const p1Score = d.p1.score;
+                const p2Score = d.p2.score;
+                let win = false;
+                if (state.playerId === 'p1') win = p1Score > p2Score;
+                else win = p2Score > p1Score;
+                const draw = p1Score === p2Score;
+                if (win) addWin(); else if (!draw) addLoss();
                 safeSetText('battle-result', draw ? "DRAW!" : (win ? "PORK POWER!" : "PULLED PORK!")); safeSetText('final-score', state.score);
-                document.getElementById('ui-gameover')?.classList.remove('hidden'); safeSetOpacity('ui-tug', '0'); setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
+                document.getElementById('ui-gameover')?.classList.remove('hidden'); 
+                const tugHUD = document.getElementById('ui-tug'); if(tugHUD) tugHUD.style.opacity = '0';
+                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
             });
         }
 
@@ -625,8 +662,17 @@
             if (state.status === 'HOME' && homeAvatarCtx) { homeAvatarCtx.clearRect(0,0,120,120); drawPigAvatar(homeAvatarCtx, SKINS.find(s=>s.id===state.selectedSkinId), 60, 70, 2.5, Math.sin(Date.now()/500)*0.1, state.selectedHatId); }
             ctx.save(); ctx.translate(0, -state.cameraY);
             if(state.isTugMode) {
-                ctx.save(); ctx.translate(0, state.cameraY); ctx.strokeStyle = '#78350f'; ctx.lineWidth = 15; ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(WIDTH, 100); ctx.stroke();
-                ctx.fillStyle = '#fff'; ctx.fillRect(WIDTH/2 + (state.tugRope * 10)-5, 80, 10, 40); ctx.restore();
+                ctx.save(); 
+                ctx.translate(0, state.cameraY); 
+                // Draw Rope Background
+                ctx.strokeStyle = '#5c2d13'; ctx.lineWidth = 20; ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(WIDTH, 100); ctx.stroke();
+                // Draw Rope Texture
+                ctx.strokeStyle = '#78350f'; ctx.setLineDash([10, 5]); ctx.lineWidth = 15; ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(WIDTH, 100); ctx.stroke(); ctx.setLineDash([]);
+                // Draw Central Marker
+                const ropeX = WIDTH/2 + (state.tugRope * 10);
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(ropeX-4, 85, 8, 30); 
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(ropeX-4, 85, 8, 30);
+                ctx.restore();
             }
             state.clocks.forEach(c => {
                 ctx.beginPath(); ctx.arc(c.x, c.y, c.radius, 0, Math.PI*2); ctx.strokeStyle = c.color; ctx.lineWidth = 6; ctx.stroke();
