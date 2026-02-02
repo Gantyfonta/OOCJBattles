@@ -35,8 +35,8 @@
         .spectate-banner { animation: slide-down 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .timer-glow { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.5)); }
-        .void-pulse { animation: void-pulse 2s ease-in-out infinite; }
-        @keyframes void-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 0.9; } }
+        .ability-glow { animation: ability-glow 1s ease-in-out infinite alternate; }
+        @keyframes ability-glow { from { box-shadow: 0 0 5px #f472b6; } to { box-shadow: 0 0 20px #f472b6; } }
     </style>
 </head>
 <body>
@@ -45,7 +45,6 @@
         
         <!-- Home Screen -->
         <div id="ui-home" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/80 backdrop-blur-sm z-40 text-white p-6 text-center">
-            <!-- Left Stats Pill -->
             <div class="absolute top-6 left-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
                 <div class="flex flex-col items-start leading-tight">
                     <span class="text-[9px] uppercase font-black text-white/40 tracking-tighter">Combat Records</span>
@@ -57,7 +56,6 @@
                 </div>
             </div>
 
-            <!-- Right Presence Pill -->
             <div class="absolute top-6 right-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
                 <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                 <div class="flex flex-col items-start leading-tight">
@@ -84,14 +82,14 @@
                     <span>DEATHMATCH</span>
                     <span class="text-[8px] opacity-60 mt-1 uppercase tracking-tighter">Last Pig Standing</span>
                 </button>
-                <button id="btn-timed-battle" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-pink-800">
-                    <span>TIMED BLITZ</span>
-                    <span class="text-[8px] opacity-60 mt-1 uppercase tracking-tighter">45s Score Race</span>
+                <button id="btn-tug-battle" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-orange-800">
+                    <span>TUG OF WAR</span>
+                    <span class="text-[8px] opacity-60 mt-1 uppercase tracking-tighter">10s Rope Pull</span>
                 </button>
-                <button id="btn-surge-battle" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-3 rounded-2xl text-lg transition-all active:scale-95 shadow-xl flex flex-col items-center leading-none border-b-4 border-purple-800">
-                    <span>VOID SURGE</span>
-                    <span class="text-[8px] opacity-60 mt-1 uppercase tracking-tighter">Outrun the Void</span>
-                </button>
+                <div class="flex gap-2 w-full">
+                    <button id="btn-timed-battle" class="flex-1 bg-pink-600 hover:bg-pink-500 text-white font-black py-2.5 rounded-2xl text-xs transition-all active:scale-95 shadow-xl uppercase tracking-tighter">Timed Blitz</button>
+                    <button id="btn-surge-battle" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-black py-2.5 rounded-2xl text-xs transition-all active:scale-95 shadow-xl uppercase tracking-tighter">Void Surge</button>
+                </div>
                 
                 <div class="flex gap-2 w-full">
                     <button id="btn-solo" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-black py-2.5 rounded-2xl text-[10px] transition-all active:scale-95 shadow-xl uppercase tracking-widest">Solo Run</button>
@@ -112,18 +110,15 @@
             </div>
         </div>
 
-        <!-- Matchmaking Overlay -->
         <div id="ui-matchmaking" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/95 z-[60] text-white p-8 text-center hidden">
             <div class="w-24 h-24 mb-6 relative">
                 <div class="absolute inset-0 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
                 <div class="absolute inset-0 flex items-center justify-center text-4xl">🐷</div>
             </div>
             <h2 id="matchmaking-mode-label" class="text-2xl font-black mb-2 uppercase italic searching-dots">Sniffing for Truffles</h2>
-            <p class="text-xs text-white/40 mb-8 max-w-xs">Scanning for rivals...</p>
             <button id="btn-cancel-match" class="text-[10px] font-bold text-white/30 hover:text-white uppercase tracking-widest border border-white/10 px-6 py-2 rounded-full">Cancel</button>
         </div>
 
-        <!-- Battle Start Screen -->
         <div id="ui-battle-start" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950 z-[70] text-white hidden">
             <div id="battle-mode-header" class="mb-8 bg-pink-600/20 px-4 py-1 rounded text-xs font-black uppercase tracking-widest text-pink-400 border border-pink-500/30">Deathmatch</div>
             <div class="flex items-center gap-8 mb-8">
@@ -144,9 +139,8 @@
             <h2 id="battle-countdown" class="text-6xl font-black italic">3</h2>
         </div>
 
-        <!-- Popups -->
         <div id="ui-skins" class="absolute inset-0 flex flex-col bg-indigo-950 z-50 text-white p-6 hidden">
-            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-black uppercase italic tracking-tighter">Skins</h2><button id="btn-close-skins" class="bg-white/10 p-2 rounded-full">✕</button></div>
+            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-black uppercase italic tracking-tighter">Skins & Abilities</h2><button id="btn-close-skins" class="bg-white/10 p-2 rounded-full">✕</button></div>
             <div id="skins-grid" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
         </div>
         <div id="ui-hats" class="absolute inset-0 flex flex-col bg-indigo-950 z-50 text-white p-6 hidden">
@@ -158,25 +152,29 @@
             <div id="themes-grid" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
         </div>
 
-        <!-- HUD -->
         <div id="ui-hud" class="absolute top-0 left-0 right-0 p-4 flex flex-col gap-4 ui-layer text-white hidden">
             <div class="flex justify-between items-start">
-                <div class="bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5">
+                <div class="bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5 flex flex-col items-center">
                     <div class="text-[8px] font-bold uppercase opacity-60 tracking-widest mb-0.5">YOU</div>
                     <div id="score-val" class="text-3xl font-black text-pink-400 leading-none">0</div>
+                    <div id="ability-icon" class="mt-1 w-6 h-6 rounded bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-[10px] font-black opacity-30 transition-all">✨</div>
                 </div>
                 
-                <!-- Timer Display (for Timed mode) -->
-                <div id="ui-timer" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
-                    <div class="bg-pink-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-pink-400/30 timer-glow">
-                        <span id="timer-val" class="text-2xl tabular-nums">45</span><span class="text-[10px] ml-1">S</span>
+                <div id="ui-tug" class="flex-1 mx-4 opacity-0 transition-opacity hidden">
+                    <div class="w-full h-4 bg-black/40 rounded-full border border-white/10 overflow-hidden relative">
+                        <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white/50 z-10"></div>
+                        <div id="tug-bar" class="absolute inset-y-0 left-1/2 bg-orange-500 transition-all duration-300" style="width: 0%;"></div>
+                    </div>
+                    <div class="flex justify-between text-[8px] font-black uppercase mt-1">
+                        <span>Losing</span>
+                        <span id="tug-timer" class="text-orange-400">10S</span>
+                        <span>Winning</span>
                     </div>
                 </div>
 
-                <!-- Alert for Surge mode -->
-                <div id="ui-surge-alert" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
-                    <div class="bg-purple-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-purple-400/30">
-                        <span class="text-xs uppercase tracking-widest animate-pulse">VOID RISING</span>
+                <div id="ui-timer" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
+                    <div class="bg-pink-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-pink-400/30 timer-glow">
+                        <span id="timer-val" class="text-2xl tabular-nums">45</span><span class="text-[10px] ml-1">S</span>
                     </div>
                 </div>
 
@@ -186,7 +184,6 @@
                 </div>
             </div>
             
-            <!-- Spectating Overlay -->
             <div id="ui-spectate" class="w-full flex justify-center hidden">
                 <div class="bg-indigo-600/90 spectate-banner text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-2xl border border-indigo-400/30 flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
@@ -195,15 +192,12 @@
             </div>
         </div>
 
-        <!-- Game Over -->
         <div id="ui-gameover" class="absolute inset-0 flex flex-col items-center justify-center bg-red-950/90 backdrop-blur-md z-[55] text-white p-6 text-center hidden">
             <h2 id="battle-result" class="text-5xl font-black mb-1 uppercase tracking-tighter">YOU GOT ROASTED!</h2>
             <div class="text-7xl font-black text-pink-400 mb-2" id="final-score">0</div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-8">Heading back to the mud...</p>
             <button id="btn-go-home" class="bg-white text-indigo-900 font-black py-4 px-12 rounded-xl text-2xl w-64 active:scale-95 transition-transform uppercase">THE MUD PIT</button>
         </div>
 
-        <!-- Username -->
         <div id="ui-username" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/95 backdrop-blur-md z-[60] text-white p-6 text-center hidden">
             <h2 class="text-2xl font-black mb-2 uppercase italic">Label Your Bacon</h2>
             <input type="text" id="username-input" maxlength="12" placeholder="PIG-NAME" class="w-64 bg-indigo-900 border-2 border-pink-500/30 text-white text-center py-3 rounded-xl font-bold mb-4 focus:outline-none focus:border-pink-500">
@@ -224,10 +218,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // --- Presence Logic ---
         const presenceRef = db.ref('presence');
         const connectedRef = db.ref('.info/connected');
-
         connectedRef.on('value', (snap) => {
             if (snap.val() === true) {
                 const con = presenceRef.push();
@@ -235,72 +227,55 @@
                 con.set({ ts: Date.now(), u: localStorage.getItem('oinkUser') || 'anonymous' });
             }
         });
-
         presenceRef.on('value', (snap) => {
-            const count = snap.numChildren() || 0;
             const el = document.getElementById('online-count-val');
-            if (el) el.innerText = count;
+            if (el) el.innerText = snap.numChildren() || 0;
         });
 
-        const WIDTH = 400; const HEIGHT = 700; const CLOCK_SPACING = 260; const JUMP_SPEED = 14;
+        const WIDTH = 400, HEIGHT = 700, CLOCK_SPACING = 260, JUMP_SPEED = 14;
         const CLOCK_COLORS = ['#F472B6', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#FB923C'];
-        const BOT_NAMES = ["MasterBoter", "BottyMcBotface", "Sir Oinks-A-Lot", "CyberHam", "RoboPig", "GlitchGrunter", "TechnoTrotter", "AI-nkler", "Clockjumper67"];
+        const BOT_NAMES = ["MasterBoter", "BottyMcBotface", "Sir Oinks-A-Lot", "CyberHam", "RoboPig", "GlitchGrunter"];
         const SKINS = [
-            { id: 'classic', name: 'Classic Oink', body: '#F472B6', ears: '#EC4899', snout: '#F9A8D4' },
-            { id: 'neon', name: 'Neon Hog', body: '#000000', ears: '#3B82F6', snout: '#60A5FA' },
-            { id: 'gold', name: 'Gold Swine', body: '#FBBF24', ears: '#D97706', snout: '#FDE68A' },
-            { id: 'ghost', name: 'Spectral Pig', body: 'rgba(255,255,255,0.4)', ears: 'rgba(200,200,255,0.3)', snout: 'rgba(255,255,255,0.5)' },
-            { id: 'magma', name: 'Magma Pig', body: '#ef4444', ears: '#991b1b', snout: '#f87171' },
-            { id: 'ice', name: 'Ice Swine', body: '#0ea5e9', ears: '#0369a1', snout: '#7dd3fc' },
-            { id: 'zombie', name: 'Zombie Oink', body: '#65a30d', ears: '#3f6212', snout: '#a3e635' },
-            { id: 'panda', name: 'Panda Pig', body: '#ffffff', ears: '#000000', snout: '#e5e7eb' },
-            { id: 'cyber', name: 'Cyber Swine', body: '#cbd5e1', ears: '#1e293b', snout: '#22d3ee' }
-        ];
-        const HATS = [
-            { id: 'none', name: 'No Hat' }, 
-            { id: 'tophat', name: 'Top Hat' }, 
-            { id: 'viking', name: 'Viking' }, 
-            { id: 'cowboy', name: 'Cowboy' }, 
-            { id: 'tuxedo', name: 'Tuxedo' }, 
-            { id: 'propeller', name: 'Propeller' },
-            { id: 'crown', name: 'King Crown' },
-            { id: 'chef', name: 'Chef Hat' },
-            { id: 'santa', name: 'Santa' },
-            { id: 'pirate', name: 'Pirate' },
-            { id: 'halo', name: 'Halo' }
+            { id: 'classic', name: 'Classic Oink', body: '#F472B6', ears: '#EC4899', snout: '#F9A8D4', ability: 'Mid-Air Boost', abDesc: 'Add extra speed in mid-flight.' },
+            { id: 'neon', name: 'Neon Hog', body: '#000000', ears: '#3B82F6', snout: '#60A5FA', ability: 'Turbo Dash', abDesc: 'Burst forward instantly.' },
+            { id: 'gold', name: 'Gold Swine', body: '#FBBF24', ears: '#D97706', snout: '#FDE68A', ability: 'Magnet', abDesc: 'Pulls the nearest clock closer.' },
+            { id: 'ghost', name: 'Spectral Pig', body: 'rgba(255,255,255,0.4)', ears: 'rgba(200,200,255,0.3)', snout: 'rgba(255,255,255,0.5)', ability: 'Phasing', abDesc: 'Pass through next clock (experimental).' },
+            { id: 'magma', name: 'Magma Pig', body: '#ef4444', ears: '#991b1b', snout: '#f87171', ability: 'Flame Burst', abDesc: 'Huge speed increase.' },
+            { id: 'ice', name: 'Ice Swine', body: '#0ea5e9', ears: '#0369a1', snout: '#7dd3fc', ability: 'Chill', abDesc: 'Slows down the rotation.' },
+            { id: 'zombie', name: 'Zombie Oink', body: '#65a30d', ears: '#3f6212', snout: '#a3e635', ability: 'Reanimate', abDesc: 'Reset your position upwards.' },
+            { id: 'panda', name: 'Panda Pig', body: '#ffffff', ears: '#000000', snout: '#e5e7eb', ability: 'Heavy Weight', abDesc: 'Slows down current clock.' },
+            { id: 'cyber', name: 'Cyber Swine', body: '#cbd5e1', ears: '#1e293b', snout: '#22d3ee', ability: 'Glitch', abDesc: 'Reverse rotation speed.' }
         ];
         const THEMES = [
-            { id: 'classic', name: 'Neon Night', bg: '#0f172a' }, 
-            { id: 'noir', name: 'Old Cinema', bg: '#000000' }, 
-            { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' },
-            { id: 'forest', name: 'Midnight Forest', bg: '#064e3b' },
-            { id: 'volcanic', name: 'Magma Chamber', bg: '#450a0a' },
-            { id: 'oceanic', name: 'Deep Sea', bg: '#0c4a6e' }
+            { id: 'classic', name: 'Neon Night', bg: '#0f172a' }, { id: 'noir', name: 'Old Cinema', bg: '#000000' }, { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' }, { id: 'forest', name: 'Midnight Forest', bg: '#064e3b' }, { id: 'volcanic', name: 'Magma Chamber', bg: '#450a0a' }, { id: 'oceanic', name: 'Deep Sea', bg: '#0c4a6e' }
         ];
 
         let state = {
-            status: 'HOME', isMultiplayer: false, isBotActive: false, isTimedMode: false, isSurgeMode: false, roomId: null, playerId: null, score: 0,
+            status: 'HOME', isMultiplayer: false, isBotActive: false, isTimedMode: false, isSurgeMode: false, isTugMode: false, roomId: null, playerId: null, score: 0,
             selectedSkinId: localStorage.getItem('oinkSkin') || 'classic',
             selectedHatId: localStorage.getItem('oinkHatSelected') || 'none',
             selectedThemeId: localStorage.getItem('oinkTheme') || 'classic',
             username: localStorage.getItem('oinkUser') || '',
             wins: parseInt(localStorage.getItem('oinkWins')) || 0,
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
-            pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false },
+            pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, abilityCD: 0, abilityActive: 0, hasDoubleJumped: false },
             bot: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: '' },
             opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none', name: 'RIVAL' },
-            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 45, matchStartTime: 0, voidY: HEIGHT + 200
+            clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 45, matchStartTime: 0, voidY: HEIGHT + 200, tugRope: 0
         };
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const homeAvatarCtx = document.getElementById('home-avatar-preview') ? document.getElementById('home-avatar-preview').getContext('2d') : null;
+        const homeAvatarCtx = document.getElementById('home-avatar-preview')?.getContext('2d');
+
+        const safeSetOpacity = (id, val) => { const el = document.getElementById(id); if(el) el.style.opacity = val; };
+        const safeSetText = (id, txt) => { const el = document.getElementById(id); if(el) el.innerText = txt; };
 
         function initAudio() { if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-        function playSound(f) {
+        function playSound(f, type='sine') {
             if(!window.audioCtx) return;
             const o = window.audioCtx.createOscillator(); const g = window.audioCtx.createGain();
-            o.connect(g); g.connect(window.audioCtx.destination);
+            o.type = type; o.connect(g); g.connect(window.audioCtx.destination);
             o.frequency.setValueAtTime(f, window.audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.01, window.audioCtx.currentTime + 0.1);
             o.start(); o.stop(window.audioCtx.currentTime + 0.1);
@@ -309,58 +284,33 @@
         function updateStatUI() {
             const total = state.wins + state.losses;
             const rate = total > 0 ? ((state.wins / total) * 100).toFixed(1) : "0.0";
-            const els = { wins: 'stat-wins', losses: 'stat-losses', rate: 'stat-rate' };
-            for(let key in els) {
-                const el = document.getElementById(els[key]);
-                if(el) el.innerText = key === 'rate' ? rate : state[key];
-            }
+            safeSetText('stat-wins', state.wins); safeSetText('stat-losses', state.losses); safeSetText('stat-rate', rate);
         }
 
-        function addWin() {
-            if (state.matchProcessed) return;
-            state.matchProcessed = true;
-            state.wins++; localStorage.setItem('oinkWins', state.wins); updateStatUI();
-        }
-
-        function addLoss() {
-            if (state.matchProcessed) return;
-            state.matchProcessed = true;
-            state.losses++; localStorage.setItem('oinkLosses', state.losses); updateStatUI();
-        }
+        function addWin() { if (state.matchProcessed) return; state.matchProcessed = true; state.wins++; localStorage.setItem('oinkWins', state.wins); updateStatUI(); }
+        function addLoss() { if (state.matchProcessed) return; state.matchProcessed = true; state.losses++; localStorage.setItem('oinkLosses', state.losses); updateStatUI(); }
 
         function backToHome() {
-            state.status = 'HOME';
-            state.isMultiplayer = false;
-            state.isBotActive = false;
-            state.isTimedMode = false;
-            state.isSurgeMode = false;
-            state.clocks = [];
-            state.score = 0;
-            state.cameraY = 0;
-            state.matchProcessed = false;
-            state.pig.isDead = false;
-            state.bot.isDead = false;
+            state.status = 'HOME'; state.isMultiplayer = false; state.isBotActive = false; state.isTimedMode = false; state.isSurgeMode = false; state.isTugMode = false;
+            state.clocks = []; state.score = 0; state.cameraY = 0; state.matchProcessed = false; state.pig.isDead = false; state.bot.isDead = false;
             if (state.roomId) { db.ref('rooms/' + state.roomId).off(); state.roomId = null; }
-            document.getElementById('ui-home').classList.remove('hidden');
-            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start', 'ui-spectate', 'ui-timer', 'ui-surge-alert'].forEach(id => {
+            const home = document.getElementById('ui-home'); if(home) home.classList.remove('hidden');
+            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start', 'ui-spectate', 'ui-timer', 'ui-surge-alert', 'ui-tug'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    if(id === 'ui-timer' || id === 'ui-surge-alert') el.style.opacity = '0';
-                    else el.classList.add('hidden');
+                if (el) { 
+                    if(['ui-timer', 'ui-surge-alert', 'ui-tug'].includes(id)) el.style.opacity = '0';
+                    el.classList.add('hidden'); 
                 }
             });
             updateStatUI();
         }
 
         async function startMatchmaking(mode = 'deathmatch') {
-            if (!state.username) return document.getElementById('ui-username').classList.remove('hidden');
-            state.status = 'MATCHMAKING';
-            state.isTimedMode = (mode === 'timed');
-            state.isSurgeMode = (mode === 'surge');
-            
-            const labels = { 'deathmatch': 'Sniffing for Truffles', 'timed': 'Searching Timed Blitz', 'surge': 'Searching Void Surge' };
-            document.getElementById('matchmaking-mode-label').innerText = labels[mode] || "Sniffing for Truffles";
-            document.getElementById('ui-matchmaking').classList.remove('hidden');
+            if (!state.username) { document.getElementById('ui-username')?.classList.remove('hidden'); return; }
+            state.status = 'MATCHMAKING'; state.isTimedMode = (mode === 'timed'); state.isSurgeMode = (mode === 'surge'); state.isTugMode = (mode === 'tug');
+            const labels = { 'deathmatch': 'Sniffing for Truffles', 'timed': 'Searching Timed Blitz', 'surge': 'Searching Void Surge', 'tug': 'Looking for Tug War' };
+            safeSetText('matchmaking-mode-label', labels[mode] || "Sniffing for Truffles");
+            document.getElementById('ui-matchmaking')?.classList.remove('hidden');
             try {
                 const queueRef = db.ref('matchmaking_queue');
                 await queueRef.update({ [state.username]: { time: Date.now(), mode } });
@@ -368,12 +318,10 @@
                 let found = false;
                 roomsSnap.forEach(snap => {
                     const room = snap.val();
-                    if (room && room.status === 'waiting' && room.mode === mode && room.p1 && room.p1.name !== state.username) { 
-                        joinRoom(snap.key); found = true; return true; 
-                    }
+                    if (room && room.status === 'waiting' && room.mode === mode && room.p1 && room.p1.name !== state.username) { joinRoom(snap.key); found = true; return true; }
                 });
                 if (!found) waitForOpponent(mode);
-            } catch (e) { console.error(e); document.getElementById('ui-matchmaking').classList.add('hidden'); }
+            } catch (e) { console.error(e); document.getElementById('ui-matchmaking')?.classList.add('hidden'); }
         }
 
         function waitForOpponent(mode) {
@@ -385,9 +333,7 @@
             });
             db.ref('rooms/' + rCode).on('value', snap => {
                 const data = snap.val();
-                if (data && data.status === 'playing' && data.p1 && data.p2) {
-                    db.ref('rooms/' + rCode).off('value'); startBattle(rCode, 'p1');
-                }
+                if (data && data.status === 'playing' && data.p1 && data.p2) { db.ref('rooms/' + rCode).off('value'); startBattle(rCode, 'p1'); }
             });
         }
 
@@ -396,9 +342,7 @@
             try {
                 await db.ref('rooms/' + rCode).update({
                     p2: { name: state.username, skin: state.selectedSkinId, hat: state.selectedHatId, x: 200, y: 550, score: 0, status: 'playing' },
-                    clocks: generateBattleClocks(),
-                    status: 'playing',
-                    startTime: Date.now() + 3000
+                    clocks: generateBattleClocks(), status: 'playing', startTime: Date.now() + 3000
                 });
                 startBattle(rCode, 'p2');
             } catch(e) { console.error(e); }
@@ -406,7 +350,7 @@
 
         function generateBattleClocks() {
             let cls = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, speed: 0.04, color: CLOCK_COLORS[0] }];
-            for(let i=1; i<250; i++) {
+            for(let i=1; i<300; i++) {
                 const r = 35 + Math.random() * 50;
                 cls.push({ id: i, x: r + 20 + Math.random() * (WIDTH - r*2 - 40), y: HEIGHT-150-i*CLOCK_SPACING, radius: r, speed: (0.04 + (i*0.001))* (60/r) * (i%2===0?1:-1), color: CLOCK_COLORS[i%CLOCK_COLORS.length] });
             }
@@ -415,378 +359,273 @@
 
         function startBattle(rCode, role) {
             state.status = 'BATTLE_START'; state.isMultiplayer = true; state.matchProcessed = false;
-            document.getElementById('ui-matchmaking').classList.add('hidden');
-            document.getElementById('ui-battle-start').classList.remove('hidden');
-            
+            document.getElementById('ui-matchmaking')?.classList.add('hidden');
+            document.getElementById('ui-battle-start')?.classList.remove('hidden');
             db.ref('rooms/' + rCode).once('value', snap => {
                 const data = snap.val(); if (!data) return backToHome();
                 const oppId = role === 'p1' ? 'p2' : 'p1';
-                state.clocks = data.clocks;
-                state.isTimedMode = data.mode === 'timed';
-                state.isSurgeMode = data.mode === 'surge';
+                state.clocks = data.clocks; state.isTimedMode = data.mode === 'timed'; state.isSurgeMode = data.mode === 'surge'; state.isTugMode = data.mode === 'tug';
                 state.matchStartTime = data.startTime || (Date.now() + 3000);
-                
-                document.getElementById('battle-mode-header').innerText = data.mode.toUpperCase();
-                document.getElementById('opponent-hud').classList.remove('hidden');
-                document.getElementById('opponent-label').innerText = 'BACON RIVAL';
-                
-                state.opponent.skin = data[oppId].skin || 'classic';
-                state.opponent.hat = data[oppId].hat || 'none';
-                state.opponent.name = data[oppId].name || 'RIVAL';
-                document.getElementById('p1-name').innerText = data[role].name;
-                document.getElementById('p2-name').innerText = data[oppId].name;
-                drawPigAvatar(document.getElementById('p1-preview').getContext('2d'), SKINS.find(s=>s.id===data[role].skin), 32, 32, 1, 0, data[role].hat);
-                drawPigAvatar(document.getElementById('p2-preview').getContext('2d'), SKINS.find(s=>s.id===data[oppId].skin), 32, 32, 1, 0, data[oppId].hat);
+                safeSetText('battle-mode-header', data.mode.toUpperCase().replace('TUG', 'TUG OF WAR'));
+                const oppHud = document.getElementById('opponent-hud'); if(oppHud) oppHud.classList.remove('hidden');
+                safeSetText('opponent-label', 'BACON RIVAL');
+                state.opponent.skin = data[oppId].skin || 'classic'; state.opponent.hat = data[oppId].hat || 'none'; state.opponent.name = data[oppId].name || 'RIVAL';
+                safeSetText('p1-name', data[role].name); safeSetText('p2-name', data[oppId].name);
+                drawPigAvatar(document.getElementById('p1-preview')?.getContext('2d'), SKINS.find(s=>s.id===data[role].skin), 32, 32, 1, 0, data[role].hat);
+                drawPigAvatar(document.getElementById('p2-preview')?.getContext('2d'), SKINS.find(s=>s.id===data[oppId].skin), 32, 32, 1, 0, data[oppId].hat);
             });
-            
             let count = 3;
             const cd = setInterval(() => {
-                count--;
-                const el = document.getElementById('battle-countdown');
-                if (el) el.innerText = count > 0 ? count : "OINK!";
-                if (count <= -1) { 
-                    clearInterval(cd); document.getElementById('ui-battle-start').classList.add('hidden'); startGame(); 
-                }
+                count--; safeSetText('battle-countdown', count > 0 ? count : "OINK!");
+                if (count <= -1) { clearInterval(cd); document.getElementById('ui-battle-start')?.classList.add('hidden'); startGame(); }
             }, 1000);
-            
             const oppId = role === 'p1' ? 'p2' : 'p1';
             db.ref('rooms/' + rCode + '/' + oppId).on('value', snap => {
                 const d = snap.val();
                 if (d) {
                     state.opponent.x = d.x; state.opponent.y = d.y; state.opponent.score = d.score;
                     state.opponent.status = d.status; state.opponent.skin = d.skin; state.opponent.hat = d.hat; state.opponent.name = d.name;
-                    const oppScoreEl = document.getElementById('opponent-score-val');
-                    if (oppScoreEl) oppScoreEl.innerText = d.score;
-                    if (d.status === 'dead' && (state.status === 'PLAYING' || state.status === 'SPECTATING')) {
-                        if(!state.isTimedMode && !state.isSurgeMode) checkWinner();
+                    safeSetText('opponent-score-val', d.score);
+                    if (state.isTugMode && state.status === 'PLAYING') {
+                        state.tugRope = (state.playerId === 'p1') ? (state.score - d.score) : (d.score - state.score);
+                        updateTugUI();
                     }
+                    if (d.status === 'dead' && (state.status === 'PLAYING' || state.status === 'SPECTATING')) { if(!state.isTimedMode && !state.isSurgeMode && !state.isTugMode) checkWinner(); }
                 }
             });
         }
 
+        function updateTugUI() {
+            const bar = document.getElementById('tug-bar'); if (!bar) return;
+            const percentage = Math.max(-50, Math.min(50, state.tugRope * 5));
+            bar.style.width = Math.abs(percentage) + '%';
+            bar.style.left = (50 + (percentage < 0 ? percentage : 0)) + '%';
+        }
+
         function startGame() {
-            initAudio(); 
-            state.status = 'PLAYING'; 
-            state.score = 0; 
-            state.cameraY = 0; 
-            state.matchProcessed = false;
-            state.timeLeft = 45;
-            state.voidY = HEIGHT + 200;
-            state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
-            
-            const scoreEl = document.getElementById('score-val');
-            if (scoreEl) scoreEl.innerText = "0";
+            initAudio(); state.status = 'PLAYING'; state.score = 0; state.cameraY = 0; state.matchProcessed = false; state.timeLeft = state.isTugMode ? 10 : 45;
+            state.voidY = HEIGHT + 200; state.tugRope = 0;
+            state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, abilityCD: 0, abilityActive: 0, hasDoubleJumped: false };
+            safeSetText('score-val', "0");
+            const abIcon = document.getElementById('ability-icon'); if(abIcon) { abIcon.style.opacity = '0.3'; abIcon.classList.remove('ability-glow'); }
             
             if (!state.isMultiplayer) {
                 state.clocks = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, angle: -Math.PI/2, speed: 0.04, color: CLOCK_COLORS[0] }];
                 for(let i=1; i<250; i++) state.clocks.push(createSoloClock(i, HEIGHT-150-i*CLOCK_SPACING, i));
-                
                 if (state.isBotActive) {
-                    const botName = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
-                    state.bot = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: botName };
-                    document.getElementById('opponent-hud').classList.remove('hidden');
-                    document.getElementById('opponent-label').innerText = 'MECHA-HAM';
-                    document.getElementById('opponent-score-val').innerText = '0';
-                } else {
-                    document.getElementById('opponent-hud').classList.add('hidden');
+                    state.bot = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)] };
+                    document.getElementById('opponent-hud')?.classList.remove('hidden'); safeSetText('opponent-label', 'MECHA-HAM');
                 }
-                document.getElementById('ui-timer').style.opacity = '0';
-                document.getElementById('ui-surge-alert').style.opacity = '0';
+                safeSetOpacity('ui-timer', '0'); safeSetOpacity('ui-surge-alert', '0'); safeSetOpacity('ui-tug', '0');
             } else {
                 state.clocks.forEach(c => c.angle = -Math.PI/2);
-                document.getElementById('opponent-hud').classList.remove('hidden');
-                document.getElementById('ui-timer').style.opacity = state.isTimedMode ? '1' : '0';
-                document.getElementById('ui-surge-alert').style.opacity = state.isSurgeMode ? '1' : '0';
+                document.getElementById('opponent-hud')?.classList.remove('hidden');
+                const tEl = document.getElementById('ui-timer'); if(tEl) { tEl.style.opacity = (state.isTimedMode || state.isTugMode) ? '1' : '0'; if(state.isTugMode) tEl.classList.add('hidden'); else tEl.classList.remove('hidden'); }
+                const tugEl = document.getElementById('ui-tug'); if(tugEl) { tugEl.style.opacity = state.isTugMode ? '1' : '0'; if(state.isTugMode) tugEl.classList.remove('hidden'); }
+                safeSetOpacity('ui-surge-alert', state.isSurgeMode ? '1' : '0');
                 db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ skin: state.selectedSkinId, hat: state.selectedHatId, status: 'playing' });
             }
-            document.getElementById('ui-home').classList.add('hidden');
-            document.getElementById('ui-hud').classList.remove('hidden');
-            document.getElementById('ui-spectate').classList.add('hidden');
+            document.getElementById('ui-home')?.classList.add('hidden'); document.getElementById('ui-hud')?.classList.remove('hidden');
         }
 
         function createSoloClock(id, y, index) {
-            const r = 35 + Math.random() * 50;
-            const speed = (0.04 + (id * 0.0005)) * (60 / r) * (id % 2 === 0 ? 1 : -1);
+            const r = 35 + Math.random() * 50; const speed = (0.04 + (id * 0.0005)) * (60 / r) * (id % 2 === 0 ? 1 : -1);
             return { id, x: r + 20 + Math.random()*(WIDTH - r*2 - 40), y, radius: r, angle: -Math.PI/2, speed, color: CLOCK_COLORS[index % CLOCK_COLORS.length] };
         }
 
         function jump() {
-            if (state.status !== 'PLAYING' || state.pig.isDead || state.pig.attachedTo === null) return;
-            const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
-            state.pig.vx = Math.cos(c.angle) * JUMP_SPEED;
-            state.pig.vy = Math.sin(c.angle) * JUMP_SPEED;
-            state.pig.attachedTo = null;
-            playSound(440);
+            if (state.status !== 'PLAYING' || state.pig.isDead) return;
+            if (state.pig.attachedTo !== null) {
+                const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
+                state.pig.vx = Math.cos(c.angle) * JUMP_SPEED; state.pig.vy = Math.sin(c.angle) * JUMP_SPEED;
+                state.pig.attachedTo = null; state.pig.hasDoubleJumped = false; playSound(440);
+            }
+        }
+
+        function activateAbility() {
+            if (state.status !== 'PLAYING' || state.pig.isDead || state.pig.abilityCD > 0) return;
+            let used = true;
+            switch(state.selectedSkinId) {
+                case 'classic': 
+                    if(state.pig.attachedTo === null && !state.pig.hasDoubleJumped) { 
+                        state.pig.vx *= 1.4; state.pig.vy *= 1.4; state.pig.hasDoubleJumped = true; playSound(660, 'square'); 
+                    } else used = false; 
+                    break;
+                case 'neon': state.pig.vx *= 2.2; state.pig.vy *= 2.2; playSound(880, 'sawtooth'); break;
+                case 'gold': state.clocks.forEach(c => { if(Math.abs(c.y - state.pig.y) < 400) c.y += (state.pig.y - c.y) * 0.25; }); playSound(220, 'sine'); break;
+                case 'ghost': state.pig.abilityActive = 60; playSound(330, 'sine'); break;
+                case 'magma': state.pig.vx *= 1.8; state.pig.vy *= 1.8; playSound(110, 'sawtooth'); break;
+                case 'ice': state.clocks.forEach(c => c.speed *= 0.1); state.pig.abilityActive = 120; playSound(440, 'sine'); break;
+                case 'zombie': state.pig.y -= 180; state.pig.attachedTo = null; playSound(50, 'square'); break;
+                case 'panda': 
+                    if(state.pig.attachedTo !== null) {
+                        const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
+                        if(c) c.speed *= 0.5;
+                        playSound(200, 'sine'); 
+                    } else used = false;
+                    break;
+                case 'cyber': state.clocks.forEach(c => c.speed *= -1.5); state.pig.abilityActive = 60; playSound(1000, 'square'); break;
+            }
+            if(used) { state.pig.abilityCD = 300; const abIcon = document.getElementById('ability-icon'); if(abIcon) abIcon.style.opacity = '0.3'; }
         }
 
         function updateBotLogic(timeScale) {
             if (!state.isBotActive || state.bot.isDead) return;
-
             if (state.bot.attachedTo !== null) {
-                const c = state.clocks.find(cl => cl.id === state.bot.attachedTo);
-                const nextClock = state.clocks.find(cl => cl.id === state.bot.score + 1);
-                
+                const c = state.clocks.find(cl => cl.id === state.bot.attachedTo); const nextClock = state.clocks.find(cl => cl.id === state.bot.score + 1);
                 if (nextClock) {
-                    const dx = nextClock.x - c.x;
-                    const dy = nextClock.y - c.y;
-                    let targetAngle = Math.atan2(dy, dx);
-                    
-                    let diff = Math.abs(c.angle % (Math.PI * 2) - targetAngle % (Math.PI * 2));
-                    if (diff > Math.PI) diff = Math.PI * 2 - diff;
-
-                    if (diff < 0.15 && state.bot.jumpCooldown <= 0) {
-                        state.bot.vx = Math.cos(c.angle) * JUMP_SPEED;
-                        state.bot.vy = Math.sin(c.angle) * JUMP_SPEED;
-                        state.bot.attachedTo = null;
-                        state.bot.jumpCooldown = 20; 
-                    }
+                    const dx = nextClock.x - c.x, dy = nextClock.y - c.y; let targetAngle = Math.atan2(dy, dx);
+                    let diff = Math.abs(c.angle % (Math.PI * 2) - targetAngle % (Math.PI * 2)); if (diff > Math.PI) diff = Math.PI * 2 - diff;
+                    if (diff < 0.15 && state.bot.jumpCooldown <= 0) { state.bot.vx = Math.cos(c.angle) * JUMP_SPEED; state.bot.vy = Math.sin(c.angle) * JUMP_SPEED; state.bot.attachedTo = null; state.bot.jumpCooldown = 20; }
                 }
-                
-                if (state.bot.attachedTo !== null) {
-                    state.bot.x = c.x + Math.cos(c.angle) * c.radius;
-                    state.bot.y = c.y + Math.sin(c.angle) * c.radius;
-                }
+                if (state.bot.attachedTo !== null) { state.bot.x = c.x + Math.cos(c.angle) * c.radius; state.bot.y = c.y + Math.sin(c.angle) * c.radius; }
             } else {
-                state.bot.x += state.bot.vx * timeScale;
-                state.bot.y += state.bot.vy * timeScale;
-                
-                for (const c of state.clocks) {
-                    if (Math.sqrt((state.bot.x-c.x)**2 + (state.bot.y-c.y)**2) < c.radius + 10) {
-                        state.bot.attachedTo = c.id;
-                        if (c.id > state.bot.score) {
-                            state.bot.score = c.id;
-                            const scoreEl = document.getElementById('opponent-score-val');
-                            if (scoreEl) scoreEl.innerText = state.bot.score;
-                        }
-                        break;
-                    }
-                }
+                state.bot.x += state.bot.vx * timeScale; state.bot.y += state.bot.vy * timeScale;
+                for (const c of state.clocks) { if (Math.sqrt((state.bot.x-c.x)**2 + (state.bot.y-c.y)**2) < c.radius + 10) { state.bot.attachedTo = c.id; if (c.id > state.bot.score) { state.bot.score = c.id; safeSetText('opponent-score-val', state.bot.score); } break; } }
             }
-
             if (state.bot.jumpCooldown > 0) state.bot.jumpCooldown -= timeScale;
-            if (state.bot.x < 0 || state.bot.x > WIDTH || state.bot.y > state.cameraY + HEIGHT + 100) {
-                state.bot.isDead = true;
-            }
+            if (state.bot.x < 0 || state.bot.x > WIDTH || state.bot.y > state.cameraY + HEIGHT + 100 || state.bot.y < state.cameraY - 100) state.bot.isDead = true;
         }
 
         function update(timeScale) {
             if (state.status !== 'PLAYING' && state.status !== 'SPECTATING') return;
             state.clocks.forEach(c => c.angle += c.speed * timeScale);
-            
-            if (state.isTimedMode && state.isMultiplayer) {
-                const now = Date.now();
-                const totalSeconds = 45;
-                const elapsed = (now - state.matchStartTime) / 1000;
-                state.timeLeft = Math.max(0, totalSeconds - elapsed);
-                const timerEl = document.getElementById('timer-val');
-                if(timerEl) timerEl.innerText = Math.ceil(state.timeLeft);
-                if (state.timeLeft <= 0 && !state.matchProcessed) endTimedMatch();
+            if (state.pig.abilityCD > 0) { 
+                state.pig.abilityCD -= timeScale; 
+                if(state.pig.abilityCD <= 0) { 
+                    const abIcon = document.getElementById('ability-icon'); 
+                    if(abIcon) { abIcon.style.opacity = '1'; abIcon.classList.add('ability-glow'); } 
+                } 
             }
-
+            if (state.pig.abilityActive > 0) state.pig.abilityActive -= timeScale;
+            if (state.isTimedMode || state.isTugMode) {
+                const elapsed = (Date.now() - state.matchStartTime) / 1000;
+                state.timeLeft = Math.max(0, (state.isTugMode ? 10 : 45) - elapsed);
+                if(state.isTugMode) safeSetText('tug-timer', Math.ceil(state.timeLeft) + 'S');
+                else safeSetText('timer-val', Math.ceil(state.timeLeft));
+                if (state.timeLeft <= 0 && !state.matchProcessed) state.isTugMode ? endTugMatch() : endTimedMatch();
+            }
             if (state.isSurgeMode) {
-                const baseVoidSpeed = 1.2;
-                const surgeSpeed = baseVoidSpeed + (state.score * 0.15);
-                state.voidY -= surgeSpeed * timeScale;
+                state.voidY -= (1.2 + (state.score * 0.15)) * timeScale;
                 if (!state.pig.isDead && state.pig.y > state.voidY) gameOver();
             }
-
             let cameraTargetY = state.pig.y;
-            
-            if (state.status === 'SPECTATING') {
-                cameraTargetY = state.opponent.y;
-            } else if (!state.pig.isDead) {
+            if (state.status === 'SPECTATING') cameraTargetY = state.opponent.y;
+            else if (!state.pig.isDead) {
                 if (state.pig.attachedTo !== null) {
-                    const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
-                    state.pig.x = c.x + Math.cos(c.angle) * c.radius;
-                    state.pig.y = c.y + Math.sin(c.angle) * c.radius;
+                    const c = state.clocks.find(cl => cl.id === state.pig.attachedTo); state.pig.x = c.x + Math.cos(c.angle) * c.radius; state.pig.y = c.y + Math.sin(c.angle) * c.radius;
                 } else {
-                    state.pig.x += state.pig.vx * timeScale;
-                    state.pig.y += state.pig.vy * timeScale;
-                    for (const c of state.clocks) {
-                        if (Math.sqrt((state.pig.x-c.x)**2 + (state.pig.y-c.y)**2) < c.radius + 10) {
-                            state.pig.attachedTo = c.id;
-                            if (c.id > state.score) { state.score = c.id; document.getElementById('score-val').innerText = state.score; }
-                            playSound(220); break;
-                        }
+                    state.pig.x += state.pig.vx * timeScale; state.pig.y += state.pig.vy * timeScale;
+                    for (const c of state.clocks) { 
+                        if (Math.sqrt((state.pig.x-c.x)**2 + (state.pig.y-c.y)**2) < c.radius + 10) { 
+                            if(state.selectedSkinId === 'ghost' && state.pig.abilityActive > 0) continue; // Phasing through
+                            state.pig.attachedTo = c.id; if (c.id > state.score) { state.score = c.id; safeSetText('score-val', state.score); } playSound(220); break; 
+                        } 
                     }
                 }
-                
-                if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT + 100) gameOver();
+                if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT + 100 || state.pig.y < state.cameraY - 400) gameOver();
                 cameraTargetY = state.pig.y;
                 if (state.isMultiplayer && state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score });
             }
-
             if (state.isBotActive) updateBotLogic(timeScale);
-            
             state.cameraY += (cameraTargetY - HEIGHT/2 - state.cameraY) * 0.1 * timeScale;
         }
 
         function gameOver() {
-            if (state.isTimedMode) {
-                state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false };
-                playSound(110); return;
-            }
-
-            if (state.pig.isDead) return;
-            state.pig.isDead = true;
+            if (state.isTimedMode || state.isTugMode) { state.pig = { ...state.pig, attachedTo: 0, vx: 0, vy: 0, x: 200, y: HEIGHT-150-60, abilityActive: 0, hasDoubleJumped: false }; playSound(110); return; }
+            if (state.pig.isDead) return; state.pig.isDead = true;
             if (state.isMultiplayer) {
                 if(state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
-                if (state.opponent.status === 'playing') {
-                    state.status = 'SPECTATING'; document.getElementById('ui-spectate').classList.remove('hidden');
-                } else {
-                    if (state.isSurgeMode) resolveSurgeMatch(); else checkWinner();
-                }
+                if (state.opponent.status === 'playing') { state.status = 'SPECTATING'; document.getElementById('ui-spectate')?.classList.remove('hidden'); }
+                else { if (state.isSurgeMode) resolveSurgeMatch(); else checkWinner(); }
             } else {
-                state.status = 'GAMEOVER';
-                if (!state.isBotActive) addLoss();
-                else {
-                    const win = state.score > state.bot.score;
-                    if (win) addWin(); else addLoss();
-                    document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
-                }
-                document.getElementById('final-score').innerText = state.score;
-                if (!state.isBotActive) document.getElementById('battle-result').innerText = "GAME OVER";
-                document.getElementById('ui-gameover').classList.remove('hidden');
-                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 1500);
+                state.status = 'GAMEOVER'; if (!state.isBotActive) addLoss(); else { const win = state.score > state.bot.score; win ? addWin() : addLoss(); safeSetText('battle-result', win ? "VICTORY!" : "DEFEATED!"); }
+                safeSetText('final-score', state.score); if (!state.isBotActive) safeSetText('battle-result', "GAME OVER");
+                document.getElementById('ui-gameover')?.classList.remove('hidden'); setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 1500);
             }
         }
 
         function resolveSurgeMatch() {
-            if (state.matchProcessed) return;
-            state.status = 'GAMEOVER';
+            if (state.matchProcessed) return; state.status = 'GAMEOVER';
             db.ref('rooms/' + state.roomId).once('value', snap => {
-                const d = snap.val(); if (!d) return;
-                const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
-                const win = state.score > oppScore;
-                const draw = state.score === oppScore;
-                if (win) addWin(); else if (!draw) addLoss();
-                document.getElementById('battle-result').innerText = draw ? "DRAW!" : (win ? "VICTORY!" : "DEFEATED!");
-                document.getElementById('final-score').innerText = state.score;
-                document.getElementById('ui-gameover').classList.remove('hidden');
-                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
+                const d = snap.val(); if (!d) return; const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
+                const win = state.score > oppScore, draw = state.score === oppScore; if (win) addWin(); else if (!draw) addLoss();
+                safeSetText('battle-result', draw ? "DRAW!" : (win ? "VICTORY!" : "DEFEATED!")); safeSetText('final-score', state.score);
+                document.getElementById('ui-gameover')?.classList.remove('hidden'); setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
             });
         }
 
         function endTimedMatch() {
-            if (state.matchProcessed) return;
-            state.status = 'GAMEOVER'; state.pig.isDead = true;
+            if (state.matchProcessed) return; state.status = 'GAMEOVER'; state.pig.isDead = true;
             if (state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
             db.ref('rooms/' + state.roomId).once('value', snap => {
-                const d = snap.val(); if (!d) return;
-                const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
-                const win = state.score > oppScore;
-                const draw = state.score === oppScore;
-                if (win) addWin(); else if (!draw) addLoss();
-                document.getElementById('battle-result').innerText = draw ? "DRAW!" : (win ? "VICTORY!" : "DEFEATED!");
-                document.getElementById('final-score').innerText = state.score;
-                document.getElementById('ui-gameover').classList.remove('hidden');
-                document.getElementById('ui-timer').style.opacity = '0';
-                setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
+                const d = snap.val(); if (!d) return; const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
+                const win = state.score > oppScore, draw = state.score === oppScore; if (win) addWin(); else if (!draw) addLoss();
+                safeSetText('battle-result', draw ? "DRAW!" : (win ? "VICTORY!" : "DEFEATED!")); safeSetText('final-score', state.score);
+                document.getElementById('ui-gameover')?.classList.remove('hidden'); safeSetOpacity('ui-timer', '0'); setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
             });
         }
 
-        let resolvingMatch = false;
-        function checkWinner() {
-            if (state.matchProcessed || !state.isMultiplayer || resolvingMatch || state.isTimedMode || state.isSurgeMode) return;
-            resolvingMatch = true;
+        function endTugMatch() {
+            if (state.matchProcessed) return; state.status = 'GAMEOVER'; state.pig.isDead = true;
+            if (state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
             db.ref('rooms/' + state.roomId).once('value', snap => {
-                const d = snap.val(); resolvingMatch = false;
-                if (!d || !d.p1 || !d.p2) return;
+                const d = snap.val(); if (!d) return; const oppScore = state.playerId === 'p1' ? d.p2.score : d.p1.score;
+                const win = state.score > oppScore, draw = state.score === oppScore; if (win) addWin(); else if (!draw) addLoss();
+                safeSetText('battle-result', draw ? "DRAW!" : (win ? "PORK POWER!" : "PULLED PORK!")); safeSetText('final-score', state.score);
+                document.getElementById('ui-gameover')?.classList.remove('hidden'); safeSetOpacity('ui-tug', '0'); setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 3500);
+            });
+        }
+
+        function checkWinner() {
+            if (state.matchProcessed || !state.isMultiplayer || state.isTimedMode || state.isSurgeMode || state.isTugMode) return;
+            db.ref('rooms/' + state.roomId).once('value', snap => {
+                const d = snap.val(); if (!d || !d.p1 || !d.p2) return;
                 if (d.p1.status === 'dead' && d.p2.status === 'dead') {
-                    state.status = 'GAMEOVER';
-                    const win = (state.playerId === 'p1' ? d.p1.score > d.p2.score : d.p2.score > d.p1.score);
-                    if (win) addWin(); else addLoss();
-                    document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
-                    document.getElementById('final-score').innerText = state.score;
-                    document.getElementById('ui-gameover').classList.remove('hidden');
-                    document.getElementById('ui-spectate').classList.add('hidden');
-                    setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 2500);
+                    state.status = 'GAMEOVER'; const win = (state.playerId === 'p1' ? d.p1.score > d.p2.score : d.p2.score > d.p1.score);
+                    if (win) addWin(); else addLoss(); safeSetText('battle-result', win ? "VICTORY!" : "DEFEATED!");
+                    safeSetText('final-score', state.score); document.getElementById('ui-gameover')?.classList.remove('hidden');
+                    document.getElementById('ui-spectate')?.classList.add('hidden'); setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 2500);
                 }
             });
         }
 
-        function drawUsername(pctx, name, x, y) {
-            if (!name) return;
-            pctx.save();
-            pctx.font = 'bold 12px Inter';
-            pctx.textAlign = 'center';
-            pctx.strokeStyle = '#000';
-            pctx.lineWidth = 3;
-            pctx.strokeText(name.toUpperCase(), x, y - 30);
-            pctx.fillStyle = '#fff';
-            pctx.fillText(name.toUpperCase(), x, y - 30);
-            pctx.restore();
-        }
-
+        function drawUsername(pctx, name, x, y) { if (!name || !pctx) return; pctx.save(); pctx.font = 'bold 12px Inter'; pctx.textAlign = 'center'; pctx.strokeStyle = '#000'; pctx.lineWidth = 3; pctx.strokeText(name.toUpperCase(), x, y - 30); pctx.fillStyle = '#fff'; pctx.fillText(name.toUpperCase(), x, y - 30); pctx.restore(); }
         function drawPigAvatar(pctx, skin, x, y, scale = 1, rotation = 0, hatId = 'none') {
-            if (!skin || !pctx) return;
-            pctx.save(); pctx.translate(x, y); pctx.scale(scale, scale); pctx.rotate(rotation);
+            if (!skin || !pctx) return; pctx.save(); pctx.translate(x, y); pctx.scale(scale, scale); pctx.rotate(rotation);
             pctx.fillStyle = skin.body; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, 0, Math.PI*2); pctx.fill();
-            if (hatId === 'tuxedo') {
-                pctx.fillStyle = '#000'; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, Math.PI * 0.2, Math.PI * 1.8); pctx.lineTo(0, 0); pctx.fill();
-                pctx.fillStyle = '#fff'; pctx.beginPath(); pctx.moveTo(0, -6); pctx.lineTo(-6, 8); pctx.lineTo(6, 8); pctx.closePath(); pctx.fill();
-            }
-            pctx.fillStyle = skin.ears; pctx.beginPath(); pctx.moveTo(-14, -10); pctx.lineTo(-18, -20); pctx.lineTo(-6, -14); pctx.fill();
-            pctx.beginPath(); pctx.moveTo(14, -10); pctx.lineTo(18, -20); pctx.lineTo(6, -14); pctx.fill();
+            if (hatId === 'tuxedo') { pctx.fillStyle = '#000'; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, Math.PI * 0.2, Math.PI * 1.8); pctx.lineTo(0, 0); pctx.fill(); pctx.fillStyle = '#fff'; pctx.beginPath(); pctx.moveTo(0, -6); pctx.lineTo(-6, 8); pctx.lineTo(6, 8); pctx.closePath(); pctx.fill(); }
+            pctx.fillStyle = skin.ears; pctx.beginPath(); pctx.moveTo(-14, -10); pctx.lineTo(-18, -20); pctx.lineTo(-6, -14); pctx.fill(); pctx.beginPath(); pctx.moveTo(14, -10); pctx.lineTo(18, -20); pctx.lineTo(6, -14); pctx.fill();
             pctx.fillStyle = skin.snout; pctx.beginPath(); pctx.ellipse(0, 4, 8, 6, 0, 0, Math.PI*2); pctx.fill();
             pctx.fillStyle = 'black'; pctx.beginPath(); pctx.arc(-7, -4, 2.5, 0, Math.PI*2); pctx.fill(); pctx.beginPath(); pctx.arc(7, -4, 2.5, 0, Math.PI*2); pctx.fill();
             if (hatId !== 'none' && hatId !== 'tuxedo') {
-                pctx.fillStyle = '#000';
-                if (hatId === 'tophat') pctx.fillRect(-10, -25, 20, 15);
+                pctx.fillStyle = '#000'; if (hatId === 'tophat') pctx.fillRect(-10, -25, 20, 15);
                 if (hatId === 'cowboy') { pctx.fillStyle = '#78350f'; pctx.beginPath(); pctx.ellipse(0, -12, 15, 4, 0, 0, Math.PI*2); pctx.fill(); pctx.fillRect(-8, -22, 16, 10); }
-                if (hatId === 'propeller') {
-                    pctx.fillStyle = '#ef4444'; pctx.beginPath(); pctx.arc(0, -14, 8, Math.PI, 0); pctx.fill();
-                    pctx.fillStyle = '#64748b'; pctx.fillRect(-1, -22, 2, 8);
-                    const spin = (Date.now() / 100) % (Math.PI * 2);
-                    pctx.save(); pctx.translate(0, -22); pctx.rotate(spin); pctx.fillStyle = '#fbbf24'; pctx.fillRect(-12, -1, 24, 2); pctx.restore();
-                }
-                if (hatId === 'halo') {
-                    pctx.strokeStyle = '#fde047'; pctx.lineWidth = 3; pctx.beginPath(); pctx.ellipse(0, -26, 12, 4, 0, 0, Math.PI*2); pctx.stroke();
-                }
+                if (hatId === 'propeller') { pctx.fillStyle = '#ef4444'; pctx.beginPath(); pctx.arc(0, -14, 8, Math.PI, 0); pctx.fill(); pctx.fillStyle = '#64748b'; pctx.fillRect(-1, -22, 2, 8); const spin = (Date.now() / 100) % (Math.PI * 2); pctx.save(); pctx.translate(0, -22); pctx.rotate(spin); pctx.fillStyle = '#fbbf24'; pctx.fillRect(-12, -1, 24, 2); pctx.restore(); }
+                if (hatId === 'halo') { pctx.strokeStyle = '#fde047'; pctx.lineWidth = 3; pctx.beginPath(); pctx.ellipse(0, -26, 12, 4, 0, 0, Math.PI*2); pctx.stroke(); }
             }
             pctx.restore();
         }
 
         function draw() {
-            const theme = THEMES.find(t => t.id === state.selectedThemeId) || THEMES[0];
-            ctx.fillStyle = theme.bg; ctx.fillRect(0,0,WIDTH,HEIGHT);
-            
-            if (state.status === 'HOME' && homeAvatarCtx) {
-                homeAvatarCtx.clearRect(0,0,120,120);
-                drawPigAvatar(homeAvatarCtx, SKINS.find(s=>s.id===state.selectedSkinId), 60, 70, 2.5, Math.sin(Date.now()/500)*0.1, state.selectedHatId);
-            }
-            
+            const theme = THEMES.find(t => t.id === state.selectedThemeId) || THEMES[0]; ctx.fillStyle = theme.bg; ctx.fillRect(0,0,WIDTH,HEIGHT);
+            if (state.status === 'HOME' && homeAvatarCtx) { homeAvatarCtx.clearRect(0,0,120,120); drawPigAvatar(homeAvatarCtx, SKINS.find(s=>s.id===state.selectedSkinId), 60, 70, 2.5, Math.sin(Date.now()/500)*0.1, state.selectedHatId); }
             ctx.save(); ctx.translate(0, -state.cameraY);
+            if(state.isTugMode) {
+                ctx.save(); ctx.translate(0, state.cameraY); ctx.strokeStyle = '#78350f'; ctx.lineWidth = 15; ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(WIDTH, 100); ctx.stroke();
+                ctx.fillStyle = '#fff'; ctx.fillRect(WIDTH/2 + (state.tugRope * 10)-5, 80, 10, 40); ctx.restore();
+            }
             state.clocks.forEach(c => {
                 ctx.beginPath(); ctx.arc(c.x, c.y, c.radius, 0, Math.PI*2); ctx.strokeStyle = c.color; ctx.lineWidth = 6; ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x + Math.cos(c.angle)*c.radius, c.y + Math.sin(c.angle)*c.radius); ctx.strokeStyle = c.color; ctx.lineWidth = 8; ctx.stroke();
             });
-            
             if (!state.pig.isDead || state.status === 'SPECTATING') {
-                ctx.globalAlpha = state.status === 'SPECTATING' ? 0.3 : 1.0;
-                drawPigAvatar(ctx, SKINS.find(s=>s.id===state.selectedSkinId), state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
-                drawUsername(ctx, state.username || 'YOU', state.pig.x, state.pig.y);
-                ctx.globalAlpha = 1.0;
+                ctx.globalAlpha = state.status === 'SPECTATING' ? 0.3 : 1.0; drawPigAvatar(ctx, SKINS.find(s=>s.id===state.selectedSkinId), state.pig.x, state.pig.y, 1, 0, state.selectedHatId); drawUsername(ctx, state.username || 'YOU', state.pig.x, state.pig.y); ctx.globalAlpha = 1.0;
             }
-            
-            if (state.isMultiplayer) {
-                ctx.globalAlpha = state.status === 'SPECTATING' ? 1.0 : 0.5;
-                drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat);
-                drawUsername(ctx, state.opponent.name, state.opponent.x, state.opponent.y);
-                ctx.globalAlpha = 1.0;
-            }
-
-            if (state.isBotActive && !state.bot.isDead) {
-                ctx.globalAlpha = 0.6;
-                drawPigAvatar(ctx, SKINS.find(s=>s.id==='cyber'), state.bot.x, state.bot.y, 1, 0, 'propeller');
-                drawUsername(ctx, state.bot.name, state.bot.x, state.bot.y);
-                ctx.globalAlpha = 1.0;
-            }
-
+            if (state.isMultiplayer) { ctx.globalAlpha = state.status === 'SPECTATING' ? 1.0 : 0.5; drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat); drawUsername(ctx, state.opponent.name, state.opponent.x, state.opponent.y); ctx.globalAlpha = 1.0; }
+            if (state.isBotActive && !state.bot.isDead) { ctx.globalAlpha = 0.6; drawPigAvatar(ctx, SKINS.find(s=>s.id==='cyber'), state.bot.x, state.bot.y, 1, 0, 'propeller'); drawUsername(ctx, state.bot.name, state.bot.x, state.bot.y); ctx.globalAlpha = 1.0; }
             if (state.isSurgeMode) {
-                const grad = ctx.createLinearGradient(0, state.voidY, 0, state.voidY + 600);
-                grad.addColorStop(0, 'rgba(147, 51, 234, 0.8)'); grad.addColorStop(0.2, 'rgba(88, 28, 135, 0.6)'); grad.addColorStop(1, 'rgba(15, 23, 42, 0.4)');
-                ctx.fillStyle = grad; ctx.fillRect(0, state.voidY, WIDTH, 1000);
+                const grad = ctx.createLinearGradient(0, state.voidY, 0, state.voidY + 600); grad.addColorStop(0, 'rgba(147, 51, 234, 0.8)'); grad.addColorStop(0.2, 'rgba(88, 28, 135, 0.6)'); grad.addColorStop(1, 'rgba(15, 23, 42, 0.4)'); ctx.fillStyle = grad; ctx.fillRect(0, state.voidY, WIDTH, 1000);
             }
             ctx.restore();
         }
@@ -795,55 +634,46 @@
 
         function initUI() {
             const bind = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
-            bind('btn-battle', () => startMatchmaking('deathmatch'));
-            bind('btn-timed-battle', () => startMatchmaking('timed'));
-            bind('btn-surge-battle', () => startMatchmaking('surge'));
+            bind('btn-battle', () => startMatchmaking('deathmatch')); bind('btn-timed-battle', () => startMatchmaking('timed'));
+            bind('btn-surge-battle', () => startMatchmaking('surge')); bind('btn-tug-battle', () => startMatchmaking('tug'));
             bind('btn-solo', () => { state.isMultiplayer = false; state.isBotActive = false; startGame(); });
             bind('btn-vs-ai', () => { state.isMultiplayer = false; state.isBotActive = true; startGame(); });
-            bind('btn-go-home', backToHome);
-            bind('btn-cancel-match', backToHome);
-            bind('div-username', () => { 
-                const el = document.getElementById('username-input'); if(el) el.value = state.username; document.getElementById('ui-username').classList.remove('hidden'); 
-            });
+            bind('btn-go-home', backToHome); bind('btn-cancel-match', backToHome);
+            bind('div-username', () => { const el = document.getElementById('username-input'); if(el) el.value = state.username; document.getElementById('ui-username')?.classList.remove('hidden'); });
             bind('btn-save-username', () => {
-                const el = document.getElementById('username-input'); const v = el ? el.value.trim() : "";
-                if (v.length < 2) return; state.username = v; localStorage.setItem('oinkUser', v);
-                document.getElementById('ui-username').classList.add('hidden'); 
-                const disp = document.getElementById('display-username'); if(disp) disp.innerText = v;
+                const el = document.getElementById('username-input'); const v = el ? el.value.trim() : ""; if (v.length < 2) return; state.username = v; localStorage.setItem('oinkUser', v);
+                document.getElementById('ui-username')?.classList.add('hidden'); safeSetText('display-username', v);
             });
-            bind('home-avatar-container', () => {
-                const idx = SKINS.findIndex(s => s.id === state.selectedSkinId);
-                state.selectedSkinId = SKINS[(idx + 1) % SKINS.length].id; localStorage.setItem('oinkSkin', state.selectedSkinId); playSound(880);
-            });
+            bind('home-avatar-container', () => { const idx = SKINS.findIndex(s => s.id === state.selectedSkinId); state.selectedSkinId = SKINS[(idx + 1) % SKINS.length].id; localStorage.setItem('oinkSkin', state.selectedSkinId); playSound(880); });
             bind('btn-skins', () => {
-                const g = document.getElementById('skins-grid'); 
-                g.innerHTML = SKINS.map(s => `<div onclick="window.selSkin('${s.id}')" class="card-item border-2 ${state.selectedSkinId===s.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="prev-${s.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${s.name}</span></div>`).join('');
-                SKINS.forEach(s => { const canvas = document.getElementById(`prev-${s.id}`); if(canvas) drawPigAvatar(canvas.getContext('2d'), s, 32, 32, 1, 0, 'none'); });
-                document.getElementById('ui-skins').classList.remove('hidden');
+                const g = document.getElementById('skins-grid'); if(!g) return;
+                g.innerHTML = SKINS.map(s => `<div onclick="window.selSkin('${s.id}')" class="card-item border-2 ${state.selectedSkinId===s.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="prev-${s.id}" width="64" height="64"></canvas><div class="flex flex-col"><span class="text-sm font-black uppercase">${s.name}</span><span class="text-[8px] font-bold text-pink-400 uppercase tracking-tighter">${s.ability}: ${s.abDesc}</span></div></div>`).join('');
+                SKINS.forEach(s => drawPigAvatar(document.getElementById(`prev-${s.id}`)?.getContext('2d'), s, 32, 32, 1, 0, 'none'));
+                document.getElementById('ui-skins')?.classList.remove('hidden');
             });
             bind('btn-hats', () => {
-                const g = document.getElementById('hats-grid'); 
+                const g = document.getElementById('hats-grid'); if(!g) return;
                 g.innerHTML = HATS.map(h => `<div onclick="window.selHat('${h.id}')" class="card-item border-2 ${state.selectedHatId===h.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><canvas id="hprev-${h.id}" width="64" height="64"></canvas><span class="text-sm font-black uppercase">${h.name}</span></div>`).join('');
-                HATS.forEach(h => { const canvas = document.getElementById(`hprev-${h.id}`); if(canvas) drawPigAvatar(canvas.getContext('2d'), SKINS[0], 32, 32, 1, 0, h.id); });
-                document.getElementById('ui-hats').classList.remove('hidden');
+                HATS.forEach(h => drawPigAvatar(document.getElementById(`hprev-${h.id}`)?.getContext('2d'), SKINS[0], 32, 32, 1, 0, h.id));
+                document.getElementById('ui-hats')?.classList.remove('hidden');
             });
             bind('btn-themes', () => {
-                const g = document.getElementById('themes-grid'); 
+                const g = document.getElementById('themes-grid'); if(!g) return;
                 g.innerHTML = THEMES.map(t => `<div onclick="window.selTheme('${t.id}')" class="card-item border-2 ${state.selectedThemeId===t.id?'border-pink-500 bg-pink-500/20':'border-white/10'} bg-white/5 p-4 rounded-2xl flex items-center gap-4"><div class="w-12 h-12 rounded-lg" style="background:${t.bg}"></div><span class="text-sm font-black uppercase">${t.name}</span></div>`).join('');
-                document.getElementById('ui-themes').classList.remove('hidden');
+                document.getElementById('ui-themes')?.classList.remove('hidden');
             });
-            ['skins', 'hats', 'themes'].forEach(k => bind(`btn-close-${k}`, () => document.getElementById(`ui-${k}`).classList.add('hidden')));
-            window.selSkin = id => { state.selectedSkinId = id; localStorage.setItem('oinkSkin', id); document.getElementById('ui-skins').classList.add('hidden'); };
-            window.selHat = id => { state.selectedHatId = id; localStorage.setItem('oinkHatSelected', id); document.getElementById('ui-hats').classList.add('hidden'); };
-            window.selTheme = id => { state.selectedThemeId = id; localStorage.setItem('oinkTheme', id); document.getElementById('ui-themes').classList.add('hidden'); };
+            ['skins', 'hats', 'themes'].forEach(k => bind(`btn-close-${k}`, () => document.getElementById(`ui-${k}`)?.classList.add('hidden')));
+            window.selSkin = id => { state.selectedSkinId = id; localStorage.setItem('oinkSkin', id); document.getElementById('ui-skins')?.classList.add('hidden'); };
+            window.selHat = id => { state.selectedHatId = id; localStorage.setItem('oinkHatSelected', id); document.getElementById('ui-hats')?.classList.add('hidden'); };
+            window.selTheme = id => { state.selectedThemeId = id; localStorage.setItem('oinkTheme', id); document.getElementById('ui-themes')?.classList.add('hidden'); };
         }
 
         canvas.addEventListener('mousedown', (e) => { if(state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
         canvas.addEventListener('touchstart', (e) => { if(state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
-        window.addEventListener('keydown', (e) => { if (e.code === 'Space' && state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
+        window.addEventListener('keydown', (e) => { if (state.status === 'PLAYING') { if(e.code === 'Space') { e.preventDefault(); initAudio(); jump(); } else { e.preventDefault(); initAudio(); activateAbility(); } } });
         
         updateStatUI(); initUI(); requestAnimationFrame(loop);
-        const disp = document.getElementById('display-username'); if(disp) disp.innerText = state.username || 'Label Your Bacon';
+        safeSetText('display-username', state.username || 'Label Your Bacon');
     </script>
 </body>
 </html>
