@@ -45,6 +45,7 @@
         
         <!-- Home Screen -->
         <div id="ui-home" class="absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/80 backdrop-blur-sm z-40 text-white p-6 text-center">
+            <!-- Left Stats Pill -->
             <div class="absolute top-6 left-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
                 <div class="flex flex-col items-start leading-tight">
                     <span class="text-[9px] uppercase font-black text-white/40 tracking-tighter">Combat Records</span>
@@ -52,6 +53,17 @@
                         <span class="text-green-400">W: <span id="stat-wins">0</span></span>
                         <span class="text-red-400">L: <span id="stat-losses">0</span></span>
                         <span class="bg-indigo-500/30 px-1.5 py-0.5 rounded text-indigo-300 ml-1"><span id="stat-rate">0</span>% WR</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Presence Pill -->
+            <div class="absolute top-6 right-6 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+                <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                <div class="flex flex-col items-start leading-tight">
+                    <span class="text-[9px] uppercase font-black text-white/40 tracking-tighter">Live</span>
+                    <div class="text-[11px] font-black text-white">
+                        <span id="online-count-val">1</span> <span class="text-[8px] opacity-60 ml-0.5 tracking-tighter">PIGS ONLINE</span>
                     </div>
                 </div>
             </div>
@@ -205,6 +217,30 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // --- Presence Logic ---
+        const presenceRef = db.ref('presence');
+        const connectedRef = db.ref('.info/connected');
+
+        connectedRef.on('value', (snap) => {
+            if (snap.val() === true) {
+                // Add this session to the presence node
+                const con = presenceRef.push();
+                // Remove this session when the client disconnects
+                con.onDisconnect().remove();
+                con.set({
+                    ts: Date.now(),
+                    u: localStorage.getItem('oinkUser') || 'anonymous'
+                });
+            }
+        });
+
+        presenceRef.on('value', (snap) => {
+            const count = snap.numChildren() || 0;
+            const el = document.getElementById('online-count-val');
+            if (el) el.innerText = count;
+        });
+        // ----------------------
 
         const WIDTH = 400; const HEIGHT = 700; const CLOCK_SPACING = 260; const JUMP_SPEED = 14;
         const CLOCK_COLORS = ['#F472B6', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#FB923C'];
