@@ -199,13 +199,32 @@
             { id: 'classic', name: 'Classic Oink', body: '#F472B6', ears: '#EC4899', snout: '#F9A8D4' },
             { id: 'neon', name: 'Neon Hog', body: '#000000', ears: '#3B82F6', snout: '#60A5FA' },
             { id: 'gold', name: 'Gold Swine', body: '#FBBF24', ears: '#D97706', snout: '#FDE68A' },
-            { id: 'ghost', name: 'Spectral Pig', body: 'rgba(255,255,255,0.4)', ears: 'rgba(200,200,255,0.3)', snout: 'rgba(255,255,255,0.5)' }
+            { id: 'ghost', name: 'Spectral Pig', body: 'rgba(255,255,255,0.4)', ears: 'rgba(200,200,255,0.3)', snout: 'rgba(255,255,255,0.5)' },
+            { id: 'magma', name: 'Magma Pig', body: '#ef4444', ears: '#991b1b', snout: '#f87171' },
+            { id: 'ice', name: 'Ice Swine', body: '#0ea5e9', ears: '#0369a1', snout: '#7dd3fc' },
+            { id: 'zombie', name: 'Zombie Oink', body: '#65a30d', ears: '#3f6212', snout: '#a3e635' },
+            { id: 'panda', name: 'Panda Pig', body: '#ffffff', ears: '#000000', snout: '#e5e7eb' }
         ];
         const HATS = [
-            { id: 'none', name: 'No Hat' }, { id: 'tophat', name: 'Top Hat' }, { id: 'viking', name: 'Viking' }, { id: 'cowboy', name: 'Cowboy' }, { id: 'tuxedo', name: 'Tuxedo' }, { id: 'propeller', name: 'Propeller' }
+            { id: 'none', name: 'No Hat' }, 
+            { id: 'tophat', name: 'Top Hat' }, 
+            { id: 'viking', name: 'Viking' }, 
+            { id: 'cowboy', name: 'Cowboy' }, 
+            { id: 'tuxedo', name: 'Tuxedo' }, 
+            { id: 'propeller', name: 'Propeller' },
+            { id: 'crown', name: 'King Crown' },
+            { id: 'chef', name: 'Chef Hat' },
+            { id: 'santa', name: 'Santa' },
+            { id: 'pirate', name: 'Pirate' },
+            { id: 'halo', name: 'Halo' }
         ];
         const THEMES = [
-            { id: 'classic', name: 'Neon Night', bg: '#0f172a' }, { id: 'noir', name: 'Old Cinema', bg: '#000000' }, { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' }
+            { id: 'classic', name: 'Neon Night', bg: '#0f172a' }, 
+            { id: 'noir', name: 'Old Cinema', bg: '#000000' }, 
+            { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' },
+            { id: 'forest', name: 'Midnight Forest', bg: '#064e3b' },
+            { id: 'volcanic', name: 'Magma Chamber', bg: '#450a0a' },
+            { id: 'oceanic', name: 'Deep Sea', bg: '#0c4a6e' }
         ];
 
         let state = {
@@ -565,26 +584,81 @@
         function drawPigAvatar(pctx, skin, x, y, scale = 1, rotation = 0, hatId = 'none') {
             if (!skin || !pctx) return;
             pctx.save(); pctx.translate(x, y); pctx.scale(scale, scale); pctx.rotate(rotation);
+            
+            // Draw body
             pctx.fillStyle = skin.body; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, 0, Math.PI*2); pctx.fill();
+            
+            // Special Tuxedo skin modification
             if (hatId === 'tuxedo') {
                 pctx.fillStyle = '#000'; pctx.beginPath(); pctx.ellipse(0, 0, 18, 16, 0, Math.PI * 0.2, Math.PI * 1.8); pctx.lineTo(0, 0); pctx.fill();
                 pctx.fillStyle = '#fff'; pctx.beginPath(); pctx.moveTo(0, -6); pctx.lineTo(-6, 8); pctx.lineTo(6, 8); pctx.closePath(); pctx.fill();
                 pctx.fillStyle = '#000'; pctx.beginPath(); pctx.moveTo(-3, 0); pctx.lineTo(3, 4); pctx.lineTo(3, -4); pctx.closePath(); pctx.moveTo(3, 0); pctx.lineTo(-3, 4); pctx.lineTo(-3, -4); pctx.closePath(); pctx.fill();
             }
+            
+            // Draw ears
             pctx.fillStyle = skin.ears; pctx.beginPath(); pctx.moveTo(-14, -10); pctx.lineTo(-18, -20); pctx.lineTo(-6, -14); pctx.fill();
             pctx.beginPath(); pctx.moveTo(14, -10); pctx.lineTo(18, -20); pctx.lineTo(6, -14); pctx.fill();
+            
+            // Draw snout
             pctx.fillStyle = skin.snout; pctx.beginPath(); pctx.ellipse(0, 4, 8, 6, 0, 0, Math.PI*2); pctx.fill();
+            
+            // Draw eyes
             pctx.fillStyle = 'black'; pctx.beginPath(); pctx.arc(-7, -4, 2.5, 0, Math.PI*2); pctx.fill(); pctx.beginPath(); pctx.arc(7, -4, 2.5, 0, Math.PI*2); pctx.fill();
+            
+            // Draw hats
             if (hatId !== 'none' && hatId !== 'tuxedo') {
                 pctx.fillStyle = '#000';
                 if (hatId === 'tophat') pctx.fillRect(-10, -25, 20, 15);
-                if (hatId === 'viking') { pctx.beginPath(); pctx.arc(0, -12, 10, Math.PI, 0); pctx.fill(); }
+                if (hatId === 'viking') { 
+                    pctx.beginPath(); pctx.arc(0, -12, 10, Math.PI, 0); pctx.fill(); 
+                    pctx.fillStyle = 'white';
+                    pctx.beginPath(); pctx.moveTo(-10, -12); pctx.lineTo(-15, -22); pctx.lineTo(-5, -15); pctx.fill();
+                    pctx.beginPath(); pctx.moveTo(10, -12); pctx.lineTo(15, -22); pctx.lineTo(5, -15); pctx.fill();
+                }
                 if (hatId === 'cowboy') { pctx.fillStyle = '#78350f'; pctx.beginPath(); pctx.ellipse(0, -12, 15, 4, 0, 0, Math.PI*2); pctx.fill(); pctx.fillRect(-8, -22, 16, 10); }
                 if (hatId === 'propeller') {
                     pctx.fillStyle = '#ef4444'; pctx.beginPath(); pctx.arc(0, -14, 8, Math.PI, 0); pctx.fill();
                     pctx.fillStyle = '#64748b'; pctx.fillRect(-1, -22, 2, 8);
                     const spin = (Date.now() / 100) % (Math.PI * 2);
                     pctx.save(); pctx.translate(0, -22); pctx.rotate(spin); pctx.fillStyle = '#fbbf24'; pctx.fillRect(-12, -1, 24, 2); pctx.restore();
+                }
+                if (hatId === 'crown') {
+                    pctx.fillStyle = '#fbbf24';
+                    pctx.beginPath();
+                    pctx.moveTo(-12, -12);
+                    pctx.lineTo(-12, -22); pctx.lineTo(-6, -16);
+                    pctx.lineTo(0, -22);
+                    pctx.lineTo(6, -16);
+                    pctx.lineTo(12, -22);
+                    pctx.lineTo(12, -12);
+                    pctx.closePath();
+                    pctx.fill();
+                    pctx.fillStyle = '#ef4444';
+                    pctx.beginPath(); pctx.arc(0, -15, 1.5, 0, Math.PI*2); pctx.fill();
+                }
+                if (hatId === 'chef') {
+                    pctx.fillStyle = 'white';
+                    pctx.beginPath(); pctx.roundRect(-8, -28, 16, 18, [4, 4, 0, 0]); pctx.fill();
+                    pctx.beginPath(); pctx.arc(0, -28, 10, 0, Math.PI*2); pctx.fill();
+                }
+                if (hatId === 'santa') {
+                    pctx.fillStyle = '#ef4444';
+                    pctx.beginPath(); pctx.moveTo(-10, -12); pctx.lineTo(10, -12); pctx.lineTo(0, -32); pctx.closePath(); pctx.fill();
+                    pctx.fillStyle = 'white';
+                    pctx.beginPath(); pctx.ellipse(0, -12, 11, 3, 0, 0, Math.PI*2); pctx.fill();
+                    pctx.beginPath(); pctx.arc(0, -32, 4, 0, Math.PI*2); pctx.fill();
+                }
+                if (hatId === 'pirate') {
+                    pctx.fillStyle = '#1e293b';
+                    pctx.beginPath(); pctx.ellipse(0, -14, 18, 8, 0, 0, Math.PI*2); pctx.fill();
+                    pctx.fillStyle = 'white';
+                    pctx.font = 'bold 8px Arial'; pctx.fillText('☠', -4, -13);
+                }
+                if (hatId === 'halo') {
+                    pctx.strokeStyle = '#fde047';
+                    pctx.lineWidth = 3;
+                    pctx.beginPath(); pctx.ellipse(0, -26, 12, 4, 0, 0, Math.PI*2); pctx.stroke();
+                    pctx.shadowBlur = 10; pctx.shadowColor = '#fde047'; pctx.stroke(); pctx.shadowBlur = 0;
                 }
             }
             pctx.restore();
@@ -684,8 +758,6 @@
                     e.preventDefault();
                     initAudio();
                     jump();
-                } else if (state.status === 'GAMEOVER') {
-                   // Home binding if we wanted quick restart, but UI buttons handle it well.
                 }
             }
         });
