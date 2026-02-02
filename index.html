@@ -32,6 +32,8 @@
         @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80% { content: '...'; } }
         .customize-hint { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        .spectate-banner { animation: slide-down 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -127,14 +129,24 @@
         </div>
 
         <!-- HUD -->
-        <div id="ui-hud" class="absolute top-0 left-0 right-0 p-4 flex justify-between ui-layer text-white hidden">
-            <div class="bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5">
-                <div class="text-[8px] font-bold uppercase opacity-60 tracking-widest mb-0.5">YOU</div>
-                <div id="score-val" class="text-3xl font-black text-pink-400 leading-none">0</div>
+        <div id="ui-hud" class="absolute top-0 left-0 right-0 p-4 flex flex-col gap-4 ui-layer text-white hidden">
+            <div class="flex justify-between items-start">
+                <div class="bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5">
+                    <div class="text-[8px] font-bold uppercase opacity-60 tracking-widest mb-0.5">YOU</div>
+                    <div id="score-val" class="text-3xl font-black text-pink-400 leading-none">0</div>
+                </div>
+                <div id="opponent-hud" class="bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5 text-right hidden">
+                    <div class="text-[8px] font-bold uppercase opacity-60 tracking-widest mb-0.5">OPPONENT</div>
+                    <div id="opponent-score-val" class="text-3xl font-black text-indigo-400 leading-none">0</div>
+                </div>
             </div>
-            <div id="opponent-hud" class="bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/5 text-right hidden">
-                <div class="text-[8px] font-bold uppercase opacity-60 tracking-widest mb-0.5">OPPONENT</div>
-                <div id="opponent-score-val" class="text-3xl font-black text-indigo-400 leading-none">0</div>
+            
+            <!-- Spectating Overlay -->
+            <div id="ui-spectate" class="w-full flex justify-center hidden">
+                <div class="bg-indigo-600/90 spectate-banner text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-2xl border border-indigo-400/30 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                    Spectating Opponent
+                </div>
             </div>
         </div>
 
@@ -197,8 +209,7 @@
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const homeAvatarPreview = document.getElementById('home-avatar-preview');
-        const homeAvatarCtx = homeAvatarPreview ? homeAvatarPreview.getContext('2d') : null;
+        const homeAvatarCtx = document.getElementById('home-avatar-preview') ? document.getElementById('home-avatar-preview').getContext('2d') : null;
 
         function initAudio() { if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function playSound(f) {
@@ -246,7 +257,7 @@
             state.pig.isDead = false;
             if (state.roomId) { db.ref('rooms/' + state.roomId).off(); state.roomId = null; }
             document.getElementById('ui-home').classList.remove('hidden');
-            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start'].forEach(id => {
+            ['ui-hud', 'ui-gameover', 'ui-matchmaking', 'ui-battle-start', 'ui-spectate'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
@@ -265,9 +276,7 @@
                 roomsSnap.forEach(snap => {
                     const room = snap.val();
                     if (room && room.status === 'waiting' && room.p1 && room.p1.name !== state.username) { 
-                        joinRoom(snap.key); 
-                        found = true; 
-                        return true; 
+                        joinRoom(snap.key); found = true; return true; 
                     }
                 });
                 if (!found) waitForOpponent();
@@ -284,8 +293,7 @@
             db.ref('rooms/' + rCode).on('value', snap => {
                 const data = snap.val();
                 if (data && data.status === 'playing' && data.p1 && data.p2) {
-                    db.ref('rooms/' + rCode).off('value'); 
-                    startBattle(rCode, 'p1');
+                    db.ref('rooms/' + rCode).off('value'); startBattle(rCode, 'p1');
                 }
             });
         }
@@ -341,7 +349,7 @@
                     state.opponent.status = d.status; state.opponent.skin = d.skin; state.opponent.hat = d.hat;
                     const oppScoreEl = document.getElementById('opponent-score-val');
                     if (oppScoreEl) oppScoreEl.innerText = d.score;
-                    if (d.status === 'dead' && state.status === 'PLAYING') checkWinner();
+                    if (d.status === 'dead' && (state.status === 'PLAYING' || state.status === 'SPECTATING')) checkWinner();
                 }
             });
         }
@@ -362,6 +370,7 @@
             }
             document.getElementById('ui-home').classList.add('hidden');
             document.getElementById('ui-hud').classList.remove('hidden');
+            document.getElementById('ui-spectate').classList.add('hidden');
         }
 
         function createSoloClock(id, y, index) {
@@ -379,9 +388,14 @@
         }
 
         function update(timeScale) {
-            if (state.status !== 'PLAYING') return;
+            if (state.status !== 'PLAYING' && state.status !== 'SPECTATING') return;
             state.clocks.forEach(c => c.angle += c.speed * timeScale);
-            if (!state.pig.isDead) {
+            
+            let cameraTargetY = state.pig.y;
+            
+            if (state.status === 'SPECTATING') {
+                cameraTargetY = state.opponent.y;
+            } else if (!state.pig.isDead) {
                 if (state.pig.attachedTo !== null) {
                     const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
                     state.pig.x = c.x + Math.cos(c.angle) * c.radius;
@@ -398,13 +412,15 @@
                     }
                 }
                 if (state.pig.x < 0 || state.pig.x > WIDTH || state.pig.y > state.cameraY + HEIGHT) { gameOver(); }
-                state.cameraY += (state.pig.y - HEIGHT/2 - state.cameraY) * 0.1 * timeScale;
+                cameraTargetY = state.pig.y;
                 if (state.isMultiplayer && state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ x: state.pig.x, y: state.pig.y, score: state.score });
-                else {
+                else if (!state.isMultiplayer) {
                     const last = state.clocks[state.clocks.length-1];
                     if (last && last.y > state.cameraY - 400) state.clocks.push(createSoloClock(last.id+1, last.y-CLOCK_SPACING, last.id+1));
                 }
             }
+            
+            state.cameraY += (cameraTargetY - HEIGHT/2 - state.cameraY) * 0.1 * timeScale;
         }
 
         function gameOver() {
@@ -412,7 +428,13 @@
             state.pig.isDead = true;
             if (state.isMultiplayer) {
                 if(state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
-                checkWinner();
+                // If opponent still alive, switch to spectate
+                if (state.opponent.status === 'playing') {
+                    state.status = 'SPECTATING';
+                    document.getElementById('ui-spectate').classList.remove('hidden');
+                } else {
+                    checkWinner();
+                }
             } else {
                 state.status = 'GAMEOVER';
                 addLoss();
@@ -438,6 +460,7 @@
                     document.getElementById('battle-result').innerText = win ? "VICTORY!" : "DEFEATED!";
                     document.getElementById('final-score').innerText = state.score;
                     document.getElementById('ui-gameover').classList.remove('hidden');
+                    document.getElementById('ui-spectate').classList.add('hidden');
                     setTimeout(() => { if(state.status === 'GAMEOVER') backToHome(); }, 2500);
                 }
             });
@@ -474,18 +497,31 @@
         function draw() {
             const theme = THEMES.find(t => t.id === state.selectedThemeId) || THEMES[0];
             ctx.fillStyle = theme.bg; ctx.fillRect(0,0,WIDTH,HEIGHT);
+            
             if (state.status === 'HOME' && homeAvatarCtx) {
                 homeAvatarCtx.clearRect(0,0,120,120);
                 drawPigAvatar(homeAvatarCtx, SKINS.find(s=>s.id===state.selectedSkinId), 60, 70, 2.5, Math.sin(Date.now()/500)*0.1, state.selectedHatId);
             }
+            
             ctx.save(); ctx.translate(0, -state.cameraY);
             state.clocks.forEach(c => {
                 ctx.beginPath(); ctx.arc(c.x, c.y, c.radius, 0, Math.PI*2); ctx.strokeStyle = c.color; ctx.lineWidth = 6; ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x + Math.cos(c.angle)*c.radius, c.y + Math.sin(c.angle)*c.radius); ctx.strokeStyle = c.color; ctx.lineWidth = 8; ctx.stroke();
             });
-            drawPigAvatar(ctx, SKINS.find(s=>s.id===state.selectedSkinId), state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
+            
+            // Draw local pig
+            if (!state.pig.isDead || state.status === 'SPECTATING') {
+                ctx.globalAlpha = state.status === 'SPECTATING' ? 0.3 : 1.0;
+                drawPigAvatar(ctx, SKINS.find(s=>s.id===state.selectedSkinId), state.pig.x, state.pig.y, 1, 0, state.selectedHatId);
+                ctx.globalAlpha = 1.0;
+            }
+            
+            // Draw opponent
             if (state.isMultiplayer) {
-                ctx.globalAlpha = 0.5; drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat); ctx.globalAlpha = 1.0;
+                // If I'm spectating, make opponent more prominent
+                ctx.globalAlpha = state.status === 'SPECTATING' ? 1.0 : 0.5;
+                drawPigAvatar(ctx, SKINS.find(s=>s.id===state.opponent.skin), state.opponent.x, state.opponent.y, 1, 0, state.opponent.hat);
+                ctx.globalAlpha = 1.0;
             }
             ctx.restore();
         }
@@ -544,8 +580,8 @@
             window.selTheme = id => { state.selectedThemeId = id; localStorage.setItem('oinkTheme', id); document.getElementById('ui-themes').classList.add('hidden'); };
         }
 
-        canvas.addEventListener('mousedown', (e) => { e.preventDefault(); initAudio(); jump(); });
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); jump(); });
+        canvas.addEventListener('mousedown', (e) => { if(state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
+        canvas.addEventListener('touchstart', (e) => { if(state.status === 'PLAYING') { e.preventDefault(); initAudio(); jump(); } });
         
         updateStatUI();
         initUI();
