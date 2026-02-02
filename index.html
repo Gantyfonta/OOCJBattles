@@ -37,7 +37,6 @@
         .timer-glow { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.5)); }
         .ability-glow { animation: ability-glow 1s ease-in-out infinite alternate; }
         @keyframes ability-glow { from { box-shadow: 0 0 5px #f472b6; } to { box-shadow: 0 0 20px #f472b6; } }
-        .rope-pattern { background: repeating-linear-gradient(45deg, #78350f, #78350f 10px, #92400e 10px, #92400e 20px); }
     </style>
 </head>
 <body>
@@ -161,19 +160,19 @@
                     <div id="ability-icon" class="mt-1 w-6 h-6 rounded bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-[10px] font-black opacity-30 transition-all">✨</div>
                 </div>
                 
-                <div id="ui-tug" class="flex-1 mx-4 opacity-0 transition-opacity hidden">
+                <div id="ui-tug" class="flex-1 mx-4 transition-opacity hidden">
                     <div class="w-full h-4 bg-black/40 rounded-full border border-white/10 overflow-hidden relative">
                         <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white/50 z-10"></div>
                         <div id="tug-bar" class="absolute inset-y-0 left-1/2 bg-orange-500 transition-all duration-300" style="width: 0%;"></div>
                     </div>
                     <div class="flex justify-between text-[8px] font-black uppercase mt-1">
-                        <span id="tug-status-left">Losing</span>
+                        <span id="tug-status-left">PULL!</span>
                         <span id="tug-timer" class="text-orange-400 font-black">10S</span>
-                        <span id="tug-status-right">Winning</span>
+                        <span id="tug-status-right">WINNING</span>
                     </div>
                 </div>
 
-                <div id="ui-timer" class="flex flex-col items-center justify-center opacity-0 transition-opacity">
+                <div id="ui-timer" class="flex flex-col items-center justify-center transition-opacity opacity-0">
                     <div class="bg-pink-600/90 text-white font-black px-4 py-2 rounded-2xl shadow-2xl border border-pink-400/30 timer-glow">
                         <span id="timer-val" class="text-2xl tabular-nums">45</span><span class="text-[10px] ml-1">S</span>
                     </div>
@@ -190,6 +189,10 @@
                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
                     Spectating Swine
                 </div>
+            </div>
+
+            <div id="ui-surge-alert" class="w-full flex justify-center transition-opacity opacity-0 pointer-events-none">
+                <div class="bg-purple-600/90 text-[8px] font-black uppercase tracking-widest px-4 py-1 rounded-full border border-purple-400/30">VOID RISING</div>
             </div>
         </div>
 
@@ -240,12 +243,20 @@
             { id: 'classic', name: 'Classic Oink', body: '#F472B6', ears: '#EC4899', snout: '#F9A8D4', ability: 'Mid-Air Boost', abDesc: 'Add extra speed in mid-flight.' },
             { id: 'neon', name: 'Neon Hog', body: '#000000', ears: '#3B82F6', snout: '#60A5FA', ability: 'Turbo Dash', abDesc: 'Burst forward instantly.' },
             { id: 'gold', name: 'Gold Swine', body: '#FBBF24', ears: '#D97706', snout: '#FDE68A', ability: 'Magnet', abDesc: 'Pulls the nearest clock closer.' },
-            { id: 'ghost', name: 'Spectral Pig', body: 'rgba(255,255,255,0.4)', ears: 'rgba(200,200,255,0.3)', snout: 'rgba(255,255,255,0.5)', ability: 'Phasing', abDesc: 'Pass through next clock (experimental).' },
+            { id: 'ghost', name: 'Spectral Pig', body: 'rgba(255,255,255,0.4)', ears: 'rgba(200,200,255,0.3)', snout: 'rgba(255,255,255,0.5)', ability: 'Phasing', abDesc: 'Pass through next clock.' },
             { id: 'magma', name: 'Magma Pig', body: '#ef4444', ears: '#991b1b', snout: '#f87171', ability: 'Flame Burst', abDesc: 'Huge speed increase.' },
             { id: 'ice', name: 'Ice Swine', body: '#0ea5e9', ears: '#0369a1', snout: '#7dd3fc', ability: 'Chill', abDesc: 'Slows down the rotation.' },
             { id: 'zombie', name: 'Zombie Oink', body: '#65a30d', ears: '#3f6212', snout: '#a3e635', ability: 'Reanimate', abDesc: 'Reset your position upwards.' },
             { id: 'panda', name: 'Panda Pig', body: '#ffffff', ears: '#000000', snout: '#e5e7eb', ability: 'Heavy Weight', abDesc: 'Slows down current clock.' },
             { id: 'cyber', name: 'Cyber Swine', body: '#cbd5e1', ears: '#1e293b', snout: '#22d3ee', ability: 'Glitch', abDesc: 'Reverse rotation speed.' }
+        ];
+        const HATS = [
+            { id: 'none', name: 'No Hat' },
+            { id: 'tophat', name: 'Top Hat' },
+            { id: 'cowboy', name: 'Cowboy Hat' },
+            { id: 'propeller', name: 'Propeller Hat' },
+            { id: 'halo', name: 'Angel Halo' },
+            { id: 'tuxedo', name: 'Tuxedo Body' }
         ];
         const THEMES = [
             { id: 'classic', name: 'Neon Night', bg: '#0f172a' }, { id: 'noir', name: 'Old Cinema', bg: '#000000' }, { id: 'synthwave', name: 'Retro Grid', bg: '#1a0b2e' }, { id: 'forest', name: 'Midnight Forest', bg: '#064e3b' }, { id: 'volcanic', name: 'Magma Chamber', bg: '#450a0a' }, { id: 'oceanic', name: 'Deep Sea', bg: '#0c4a6e' }
@@ -405,9 +416,9 @@
             const leftTxt = document.getElementById('tug-status-left');
             const rightTxt = document.getElementById('tug-status-right');
             if(leftTxt && rightTxt) {
-                if(state.tugRope > 0) { leftTxt.className = "text-white opacity-40"; rightTxt.className = "text-green-400 font-black animate-pulse"; }
-                else if (state.tugRope < 0) { leftTxt.className = "text-red-400 font-black animate-pulse"; rightTxt.className = "text-white opacity-40"; }
-                else { leftTxt.className = "text-white opacity-40"; rightTxt.className = "text-white opacity-40"; }
+                if(state.tugRope > 0) { leftTxt.className = "text-white opacity-40"; rightTxt.className = "text-green-400 font-black animate-pulse"; rightTxt.innerText = "WINNING"; }
+                else if (state.tugRope < 0) { leftTxt.className = "text-red-400 font-black animate-pulse"; leftTxt.innerText = "LOSING"; rightTxt.className = "text-white opacity-40"; }
+                else { leftTxt.className = "text-white opacity-40"; leftTxt.innerText = "PULL!"; rightTxt.className = "text-white opacity-40"; rightTxt.innerText = "HOLD!"; }
             }
         }
 
@@ -537,6 +548,7 @@
             if (state.isSurgeMode) {
                 state.voidY -= (1.2 + (state.score * 0.15)) * timeScale;
                 if (!state.pig.isDead && state.pig.y > state.voidY) gameOver();
+                safeSetOpacity('ui-surge-alert', state.pig.y > state.voidY - 100 ? '1' : '0');
             }
             let cameraTargetY = state.pig.y;
             if (state.status === 'SPECTATING') cameraTargetY = state.opponent.y;
@@ -664,11 +676,8 @@
             if(state.isTugMode) {
                 ctx.save(); 
                 ctx.translate(0, state.cameraY); 
-                // Draw Rope Background
                 ctx.strokeStyle = '#5c2d13'; ctx.lineWidth = 20; ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(WIDTH, 100); ctx.stroke();
-                // Draw Rope Texture
                 ctx.strokeStyle = '#78350f'; ctx.setLineDash([10, 5]); ctx.lineWidth = 15; ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(WIDTH, 100); ctx.stroke(); ctx.setLineDash([]);
-                // Draw Central Marker
                 const ropeX = WIDTH/2 + (state.tugRope * 10);
                 ctx.fillStyle = '#ef4444'; ctx.fillRect(ropeX-4, 85, 8, 30); 
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(ropeX-4, 85, 8, 30);
