@@ -258,8 +258,8 @@
             username: localStorage.getItem('oinkUser') || '',
             wins: parseInt(localStorage.getItem('oinkWins')) || 0,
             losses: parseInt(localStorage.getItem('oinkLosses')) || 0,
-            pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, abilityCD: 0, abilityActive: 0, hasDoubleJumped: false },
-            bot: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: '' },
+            pig: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, abilityCD: 0, abilityActive: 0, hasDoubleJumped: false, jumpCooldown: 0, lastAttachedId: null },
+            bot: { x: 200, y: 550, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: '', collisionCooldown: 0, lastAttachedId: null },
             opponent: { x: 200, y: 550, score: 0, status: 'playing', skin: 'classic', hat: 'none', name: 'RIVAL' },
             clocks: [], cameraY: 0, lastTime: 0, matchProcessed: false, timeLeft: 45, matchStartTime: 0, voidY: HEIGHT + 200, tugRope: 0
         };
@@ -405,7 +405,7 @@
         function startGame() {
             initAudio(); state.status = 'PLAYING'; state.score = 0; state.cameraY = 0; state.matchProcessed = false; state.timeLeft = state.isTugMode ? 10 : 45;
             state.voidY = HEIGHT + 200; state.tugRope = 0;
-            state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, abilityCD: 0, abilityActive: 0, hasDoubleJumped: false };
+            state.pig = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, abilityCD: 0, abilityActive: 0, hasDoubleJumped: false, jumpCooldown: 0, lastAttachedId: null };
             safeSetText('score-val', "0");
             const abIcon = document.getElementById('ability-icon'); if(abIcon) { abIcon.style.opacity = '0.3'; abIcon.classList.remove('ability-glow'); }
             
@@ -413,7 +413,7 @@
                 state.clocks = [{ id: 0, x: 200, y: HEIGHT-150, radius: 60, angle: -Math.PI/2, speed: 0.04, color: CLOCK_COLORS[0] }];
                 for(let i=1; i<250; i++) state.clocks.push(createSoloClock(i, HEIGHT-150-i*CLOCK_SPACING, i));
                 if (state.isBotActive) {
-                    state.bot = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)] };
+                    state.bot = { x: 200, y: HEIGHT-150-60, vx: 0, vy: 0, attachedTo: 0, angle: -Math.PI/2, isDead: false, score: 0, jumpCooldown: 0, name: BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)], lastAttachedId: null, collisionCooldown: 0 };
                     document.getElementById('opponent-hud')?.classList.remove('hidden'); safeSetText('opponent-label', 'MECHA-HAM');
                 }
                 safeSetOpacity('ui-timer', '0'); safeSetOpacity('ui-surge-alert', '0'); safeSetOpacity('ui-tug', '0');
@@ -437,6 +437,8 @@
             if (state.status !== 'PLAYING' || state.pig.isDead) return;
             if (state.pig.attachedTo !== null) {
                 const c = state.clocks.find(cl => cl.id === state.pig.attachedTo);
+                state.pig.lastAttachedId = state.pig.attachedTo;
+                state.pig.jumpCooldown = 15; // Ignore source clock for ~15 frames (normalized by timeScale)
                 state.pig.vx = Math.cos(c.angle) * JUMP_SPEED; state.pig.vy = Math.sin(c.angle) * JUMP_SPEED;
                 state.pig.attachedTo = null; state.pig.hasDoubleJumped = false; playSound(440);
             }
@@ -476,12 +478,20 @@
                 if (nextClock) {
                     const dx = nextClock.x - c.x, dy = nextClock.y - c.y; let targetAngle = Math.atan2(dy, dx);
                     let diff = Math.abs(c.angle % (Math.PI * 2) - targetAngle % (Math.PI * 2)); if (diff > Math.PI) diff = Math.PI * 2 - diff;
-                    if (diff < 0.15 && state.bot.jumpCooldown <= 0) { state.bot.vx = Math.cos(c.angle) * JUMP_SPEED; state.bot.vy = Math.sin(c.angle) * JUMP_SPEED; state.bot.attachedTo = null; state.bot.jumpCooldown = 20; }
+                    if (diff < 0.15 && state.bot.jumpCooldown <= 0) { 
+                        state.bot.lastAttachedId = state.bot.attachedTo;
+                        state.bot.collisionCooldown = 15;
+                        state.bot.vx = Math.cos(c.angle) * JUMP_SPEED; state.bot.vy = Math.sin(c.angle) * JUMP_SPEED; state.bot.attachedTo = null; state.bot.jumpCooldown = 20; 
+                    }
                 }
                 if (state.bot.attachedTo !== null) { state.bot.x = c.x + Math.cos(c.angle) * c.radius; state.bot.y = c.y + Math.sin(c.angle) * c.radius; }
             } else {
                 state.bot.x += state.bot.vx * timeScale; state.bot.y += state.bot.vy * timeScale;
-                for (const c of state.clocks) { if (Math.sqrt((state.bot.x-c.x)**2 + (state.bot.y-c.y)**2) < c.radius + 10) { state.bot.attachedTo = c.id; if (c.id > state.bot.score) { state.bot.score = c.id; safeSetText('opponent-score-val', state.bot.score); } break; } }
+                if (state.bot.collisionCooldown > 0) state.bot.collisionCooldown -= timeScale;
+                for (const c of state.clocks) { 
+                    if (state.bot.collisionCooldown > 0 && c.id === state.bot.lastAttachedId) continue;
+                    if (Math.sqrt((state.bot.x-c.x)**2 + (state.bot.y-c.y)**2) < c.radius + 10) { state.bot.attachedTo = c.id; if (c.id > state.bot.score) { state.bot.score = c.id; safeSetText('opponent-score-val', state.bot.score); } break; } 
+                }
             }
             if (state.bot.jumpCooldown > 0) state.bot.jumpCooldown -= timeScale;
             if (state.bot.x < 0 || state.bot.x > WIDTH || state.bot.y > state.cameraY + HEIGHT + 100 || state.bot.y < state.cameraY - 100) state.bot.isDead = true;
@@ -498,6 +508,8 @@
                 } 
             }
             if (state.pig.abilityActive > 0) state.pig.abilityActive -= timeScale;
+            if (state.pig.jumpCooldown > 0) state.pig.jumpCooldown -= timeScale;
+
             if (state.isTimedMode || state.isTugMode) {
                 const elapsed = (Date.now() - state.matchStartTime) / 1000;
                 state.timeLeft = Math.max(0, (state.isTugMode ? 10 : 45) - elapsed);
@@ -517,8 +529,9 @@
                 } else {
                     state.pig.x += state.pig.vx * timeScale; state.pig.y += state.pig.vy * timeScale;
                     for (const c of state.clocks) { 
+                        if (state.pig.jumpCooldown > 0 && c.id === state.pig.lastAttachedId) continue;
                         if (Math.sqrt((state.pig.x-c.x)**2 + (state.pig.y-c.y)**2) < c.radius + 10) { 
-                            if(state.selectedSkinId === 'ghost' && state.pig.abilityActive > 0) continue; // Phasing through
+                            if(state.selectedSkinId === 'ghost' && state.pig.abilityActive > 0) continue; 
                             state.pig.attachedTo = c.id; if (c.id > state.score) { state.score = c.id; safeSetText('score-val', state.score); } playSound(220); break; 
                         } 
                     }
@@ -532,7 +545,7 @@
         }
 
         function gameOver() {
-            if (state.isTimedMode || state.isTugMode) { state.pig = { ...state.pig, attachedTo: 0, vx: 0, vy: 0, x: 200, y: HEIGHT-150-60, abilityActive: 0, hasDoubleJumped: false }; playSound(110); return; }
+            if (state.isTimedMode || state.isTugMode) { state.pig = { ...state.pig, attachedTo: 0, vx: 0, vy: 0, x: 200, y: HEIGHT-150-60, abilityActive: 0, hasDoubleJumped: false, jumpCooldown: 0 }; playSound(110); return; }
             if (state.pig.isDead) return; state.pig.isDead = true;
             if (state.isMultiplayer) {
                 if(state.roomId) db.ref('rooms/' + state.roomId + '/' + state.playerId).update({ status: 'dead' });
